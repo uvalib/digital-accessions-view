@@ -1,0 +1,19 @@
+<html>
+  <head>
+      <title>Accession $aname</title>
+      <link rel="stylesheet" type="text/css" href="/style.css">
+  </head>
+  <body>
+    <div class="breadcrumbs"><a href="/accessions">Accessions</a> <span class="hierarchy-separator" /><h1>$aname</h1></div>
+    <table>
+        <tr><th>Bag ID</th><th>Title</th><th>Date sent to AP Trust</th></tr>
+        #foreach( $b in $bags )
+            <tr>
+              <td><a href="/accessions/$aname/bags/$b["bname"]">$b["bname"]</a></td>
+              <td>$b["title"]</td>
+              <td>$b["ingestDate"]</td>
+            </tr>
+        #end
+    </table>
+  </body>
+</html>

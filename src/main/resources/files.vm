@@ -1,0 +1,30 @@
+<html>
+  <head>
+      <title>$aname : Bag $bname</title>
+      <link rel="stylesheet" type="text/css" href="/style.css">
+  </head>
+  <body>
+    <div class="breadcrumbs"><a href="/accessions">Accessions</a> <span class="hierarchy-separator" /> <a href="/accessions/$aname">$aname</a> <span class="hierarcy-separator" /><h1>$bname</h1></div>
+    <dl>
+        <dt>Title</dt>
+        <dd>$btitle</dd>
+    </dl>
+    <table>
+        <tr><th>File Path</th><th>Size</th><th>Mime Type</th></tr>
+        #foreach( $f in $files )
+            #set( $furi = $f["file"] )
+            #if ($f["size"] == "")
+              <tr class="missing-file">
+                <td>$f["path"]</td>
+                <td>(not in fedora)</td>
+            #else
+              <tr>
+                <td><a href="$furi">$f["path"]</a></td>
+                <td>$f["size"]</td>
+            #end
+              <td>$f["mime"]</td>
+            </tr>
+        #end
+    </table>
+  </body>
+</html>
