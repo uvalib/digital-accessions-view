@@ -2,6 +2,7 @@
   <head>
       <title>$aname : Bag $bname</title>
       <link rel="stylesheet" type="text/css" href="/style.css">
+      <script type="text/javascript" src="/main.js"></script>
   </head>
   <body>
     <div class="breadcrumbs"><a href="/accessions">Accessions</a> <span class="hierarchy-separator" /> <a href="/accessions/$aname">$aname</a> <span class="hierarcy-separator" /><h1>$bname</h1></div>
@@ -9,8 +10,8 @@
         <dt>Title</dt>
         <dd>$btitle</dd>
     </dl>
-    <table>
-        <tr><th>File Path</th><th>Size</th><th>Mime Type</th></tr>
+    <table style="float:left; margin-right:5px;">
+        <tr><th>File Path</th><th>Size</th><th>Mime Type</th><th>Add</th></tr>
         #foreach( $f in $files )
             #set( $furi = $f["file"] )
             #if ($f["size"] == "")
@@ -23,8 +24,18 @@
                 <td>$f["size"]</td>
             #end
               <td>$f["mime"]</td>
+              <td><button type="button" onclick="add('$f["path"]')">Add</button></td>
             </tr>
         #end
     </table>
+    
+    <table id="selectionTable">
+    	<tr>
+    		<th id="test">Current Files</th>
+    		<th>Remove</th>
+    	</tr>
+    </table>
+    
+    <button type="button" onClick="createImageSet()">Create Image Set</button>
   </body>
 </html>
