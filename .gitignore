@@ -4,3 +4,4 @@ target
 .project
 .settings/
 host.txt
+fcrepo-config.properties
