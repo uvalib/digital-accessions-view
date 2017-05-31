@@ -6,6 +6,7 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+import org.apache.commons.io.FileUtils;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -15,10 +16,13 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 
 @Path("")
 public class AView {
@@ -30,7 +34,9 @@ public class AView {
     private DisplayHelper helper;
 
     private FusekiReader fusekiReader;
-
+    
+    private URL url;
+    
     public AView() throws URISyntaxException, MalformedURLException {
         helper = new DisplayHelper();
 
@@ -42,25 +48,32 @@ public class AView {
         accessionsTemplate = ve.getTemplate("accessions.vm");
         bagsTemplate = ve.getTemplate("bags.vm");
         filesTemplate = ve.getTemplate("files.vm");
+        
+        try {
+        	url = new URL (FileUtils.readFileToString(new File("host.txt"), "UTF-8"));
+        } catch (IOException e) {
+        	System.out.println("Error reading from host.txt, " + (e.getMessage() != null ? e.getMessage() : ""));
+        	url = null;
+        }
     }
 
     private String getASpaceURI(UriInfo uriInfo) {
-        try {
-            return new URIBuilder()
-                    .setHost(uriInfo.getRequestUri().getHost())
-                    .setScheme(uriInfo.getRequestUri().getScheme())
-                    .setPort(uriInfo.getRequestUri().getPort())
-                    .setPath("/fcrepo/rest/aspace").build().toString();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+	        try {
+	            return new URIBuilder()
+	                    .setHost(url == null ? uriInfo.getRequestUri().getHost() : url.getHost())
+	                    .setScheme(uriInfo.getRequestUri().getScheme())
+	                    .setPort(uriInfo.getRequestUri().getPort())
+	                    .setPath("/fcrepo/rest/aspace").build().toString();
+	        } catch (URISyntaxException e) {
+	            throw new RuntimeException(e);
+	        }
     }
 
     private FusekiReader getTriplestore(UriInfo uriInfo) {
         if (fusekiReader == null) {
-            try {
+    		try {
                 fusekiReader = new FusekiReader(new URIBuilder()
-                        .setHost(uriInfo.getRequestUri().getHost())
+                		.setHost(url == null ? uriInfo.getRequestUri().getHost() : url.getHost())
                         .setScheme(uriInfo.getRequestUri().getScheme())
                         .setPort(uriInfo.getRequestUri().getPort())
                         .setPath("/fuseki/fcrepo").build().toString());
@@ -77,12 +90,13 @@ public class AView {
         VelocityContext context = new VelocityContext();
         context.put("accessionRoot", getASpaceURI(uriInfo));
         context.put("helper", helper);
-        context.put("accessions", getTriplestore(uriInfo).getQueryResponse("PREFIX fcrepo: <http://fedora.info/definitions/v4/repository#>\n" +
+    	context.put("accessions", getTriplestore(uriInfo).getQueryResponse("PREFIX fcrepo: <http://fedora.info/definitions/v4/repository#>\n" +
                 "\n" +
                 "SELECT ?a \n" +
                 "WHERE {\n" +
-                "    ?a fcrepo:hasParent <http://" + uriInfo.getRequestUri().getHost() + ":8080/fcrepo/rest/aspace>\n" +
-                "}"));
+                "    ?a fcrepo:hasParent <http://" + (url == null ? uriInfo.getRequestUri().getHost() : url.getHost()) + ":8080/fcrepo/rest/aspace>\n" +
+    			"}"));
+
         StringWriter w = new StringWriter();
         accessionsTemplate.merge(context, w);
         return Response.ok().encoding("UTF-8").entity(w.toString()).build();
