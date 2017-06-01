@@ -90,12 +90,11 @@ public class AView {
         VelocityContext context = new VelocityContext();
         context.put("accessionRoot", getASpaceURI(uriInfo));
         context.put("helper", helper);
-    	context.put("accessions", getTriplestore(uriInfo).getQueryResponse("PREFIX fcrepo: <http://fedora.info/definitions/v4/repository#>\n" +
-                "\n" +
+    	context.put("accessions", getTriplestore(uriInfo).getQueryResponse("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
                 "SELECT ?a \n" +
                 "WHERE {\n" +
-                "    ?a fcrepo:hasParent <http://" + (url == null ? uriInfo.getRequestUri().getHost() : url.getHost()) + ":8080/fcrepo/rest/aspace>\n" +
-    			"}"));
+                "  ?a rdf:type <http://ontology.lib.virginia.edu/preservation#Accession> .\n" +
+                "} ORDERBY ?a "));
 
         StringWriter w = new StringWriter();
         accessionsTemplate.merge(context, w);
