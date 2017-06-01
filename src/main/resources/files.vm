@@ -4,7 +4,7 @@
       <link rel="stylesheet" type="text/css" href="/style.css">
       <script type="text/javascript" src="/main.js"></script>
   </head>
-  <body>
+  <body onload="noImageCheck()">
     <div class="breadcrumbs"><a href="/accessions">Accessions</a> <span class="hierarchy-separator" /> <a href="/accessions/$aname">$aname</a> <span class="hierarcy-separator" /><h1>$bname</h1></div>
     <dl>
         <dt>Title</dt>
@@ -24,18 +24,19 @@
                 <td>$f["size"]</td>
             #end
               <td>$f["mime"]</td>
-              <td><button type="button" onclick="add('$f["path"]')">Add</button></td>
+              <td><button type="button" onclick="add(&quot;$f["path"]&quot;)">Add</button></td>
             </tr>
         #end
     </table>
     
     <table id="selectionTable">
     	<tr>
-    		<th id="test">Current Files</th>
+    		<th>Selected Files</th>
     		<th>Remove</th>
     	</tr>
+    	<tr>
+    		<td colspan="2"><button type="button" onClick="createImageSet()">Create Image Set</button></td>
+    	</tr>
     </table>
-    
-    <button type="button" onClick="createImageSet()">Create Image Set</button>
   </body>
 </html>
