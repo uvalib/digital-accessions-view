@@ -34,11 +34,12 @@
     		<th>Move</th>
     		<th>Selected Files</th>
     		<th>Remove</th>
+    		<th style="display: none;">D</th>
     	</tr>
     	<tr>
-    		<td colspan="3"><button type="button" id="createButton" title="Create image set from selection" onClick="createImageSet()">Create Image Set</button></td>
+    		<td colspan="4"><button type="button" id="createButton" title="Create image set from selection" onClick="createImageSet()">Create Image Set</button></td>
     	</tr>
     </table>
-    <p id="p"></p>
+    <p id="duplicateWarning"></p>
   </body>
 </html>

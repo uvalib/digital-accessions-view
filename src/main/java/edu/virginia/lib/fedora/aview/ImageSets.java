@@ -62,6 +62,7 @@ public class ImageSets {
     @POST
     @Path("image-sets")
     public Response createImageSet(InputStream jsonInput) {
+
         JsonReader jsonReader = Json.createReader(jsonInput);
         JsonArray array = jsonReader.readArray();
 

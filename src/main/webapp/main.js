@@ -1,5 +1,5 @@
-var imageList = [];
-var uriList = [];
+var imageList = []; //Potentially non-unique file path shown to user
+var uriList = []; //Unique URI sent to server
 
 
 
@@ -15,13 +15,7 @@ function addRow(img, uri) {
 	var newRow = table.insertRow(table.getElementsByTagName("tr").length - 1);
 	
 	populateRow(newRow, img, uri);
-	
-	var str = "";
-	for (i = 0; i < imageList.length; i++) {
-		str += imageList[i] + "<br>";
-	}
-	document.getElementById("p").innerHTML = str;
-	
+	checkDuplicates();
 	noImageCheck();
 }
 
@@ -44,13 +38,7 @@ function removeRow(button) {
 	}
 	
 	row.remove();
-	
-	var str = "";
-	for (i = 0; i < imageList.length; i++) {
-		str += imageList[i] + "<br>";
-	}
-	document.getElementById("p").innerHTML = str;
-	
+	checkDuplicates();
 	noImageCheck();
 }
 
@@ -126,11 +114,8 @@ function moveRow(button, up, end) {
 			row.remove();
 		}
 	}
-	var str = "";
-	for (i = 0; i < imageList.length; i++) {
-		str += imageList[i] + "<br>";
-	}
-	document.getElementById("p").innerHTML = str;
+	
+	checkDuplicates();
 }
 
 
@@ -168,25 +153,30 @@ function noImageCheck() {
 
 
 
-/* Unfinished. Sends array of URIs to server for image set creation. */
+/* Sends uriList to server as a string for image set creation. */
 
 function createImageSet() {
-	//create properly formatted string from array.
-	var uriString = "[ ";
-	for (i = 0; i < uriList.length; i++) {
-		uriString += "\"" + uriList[i] + "\", ";
-	}
-	uriString = uriString.slice(0, -2) + " ]";
-	
-	//black magic
-	var xhr = new XMLHttpRequest();
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState == 4 && this.status == 200) {
-			
+	if (uriList.length != 0) {
+		//convert array to string
+		var uriString = "[ ";
+		for (i = 0; i < uriList.length; i++) {
+			uriString += "\"" + uriList[i] + "\", ";
 		}
+		uriString = uriString.slice(0, -2) + " ]";
+		
+		//create AJAX server request
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState == 4 && this.status != 200) {
+				alert("Error: Status code " + this.status + ", ready state " + xhr.readyState + ".");
+			}
+		}
+		
+		xhr.open("POST", "/accessions/image-sets", true);
+		xhr.send(uriString);
+	} else {
+		alert("Error: uriList is empty; no data to send.");
 	}
-	xhr.open("POST", true);
-	xhr.send(uriString);
 }
 
 
@@ -250,4 +240,93 @@ function populateRow(newRow, img, uri) {
 	var uriCell = newRow.insertCell();
 	uriCell.innerHTML = uri;
 	uriCell.style.display = "none";
+	
+	var duplicateCell = newRow.insertCell();
+	duplicateCell.style.display = "none";
+}
+
+
+
+/* Checks for duplicate URIs and highlights their rows if found. */
+
+function checkDuplicates() {
+	var duplicates = [];
+	var current;
+	var exemptList = [];
+	var duplicateWarning = document.getElementById('duplicateWarning');
+	
+	//go through all rows
+	for (i = 0; i < uriList.length; i++) {
+		
+		//check if rows i and j are duplicates
+		var current = [i];
+		for (j = i + 1; j < uriList.length; j++) {
+			
+			//check if j has been marked as a duplicate before
+			var exempt = false;
+			for (k = 0; k < exemptList.length; k++) {
+				if (exemptList[k] == j) {
+					exempt = true;
+				}
+			}
+			
+			if (uriList[i] == uriList[j] && !exempt) {
+				current.push(j);
+			}
+		}
+		
+		if (current.length != 1) {
+			duplicates.push(current);
+			//exempt uris from additional for loop passes
+			for (j = 0; j < current.length; j++) {
+				exemptList.push(current[j]);
+			}
+		}
+	}
+	
+	if (duplicates.length > 0) {
+		//for all rows, if row number matches duplicate, insert index of duplicate
+		var table = document.getElementById('selectionTable');
+		
+		table.children[0].children[0].children[3].style.display = "table-cell";
+		
+		//for every row
+		for (i = 1; i < table.children[0].children.length - 1; i++) {
+			var proc = false;
+			var cell = table.children[0].children[i].lastChild;
+			
+			cell.style.display = "table-cell";
+			
+			//for every set of duplicates
+			for (j = 0; j < duplicates.length; j++) {
+				//for every duplicate
+				for (k = 0; k < duplicates[j].length; k++) {
+					if (duplicates[j][k] == i - 1) {
+						cell.innerHTML = j + 1;
+						proc = true;
+					} //if 'if' never procs then remove the cell.
+				}
+			}
+			
+			if (!proc) {
+				cell.innerHTML = "";
+			}
+		}
+		
+		duplicateWarning.innerHTML = "Warning: " + duplicates.length +
+				(duplicates.length == 1 ? " set " : " sets ") +
+				"of duplicates detected.";
+	} else {
+		//hide duplicate cells
+		var table = document.getElementById('selectionTable');
+		
+		table.children[0].children[0].children[3].style.display = "none";
+		
+		for (i = 1; i < table.children[0].children.length - 1; i++) {
+			var cell = table.children[0].children[i].lastChild;
+			cell.style.display = "none";
+		}
+		
+		duplicateWarning.innerHTML = "";
+	}
 }
