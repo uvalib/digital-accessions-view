@@ -25,7 +25,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 @Path("")
-public class AView {
+public class AView extends AbstractWebResource {
 
     private Template accessionsTemplate;
     private Template bagsTemplate;
@@ -33,9 +33,6 @@ public class AView {
 
     private DisplayHelper helper;
 
-    private FusekiReader fusekiReader;
-    
-    private URL url;
     
     public AView() throws URISyntaxException, MalformedURLException {
         helper = new DisplayHelper();
@@ -48,40 +45,7 @@ public class AView {
         accessionsTemplate = ve.getTemplate("accessions.vm");
         bagsTemplate = ve.getTemplate("bags.vm");
         filesTemplate = ve.getTemplate("files.vm");
-        
-        try {
-        	url = new URL (FileUtils.readFileToString(new File("host.txt"), "UTF-8"));
-        } catch (IOException e) {
-        	System.out.println("Error reading from host.txt, " + (e.getMessage() != null ? e.getMessage() : ""));
-        	url = null;
-        }
-    }
 
-    private String getASpaceURI(UriInfo uriInfo) {
-	        try {
-	            return new URIBuilder()
-	                    .setHost(url == null ? uriInfo.getRequestUri().getHost() : url.getHost())
-	                    .setScheme(uriInfo.getRequestUri().getScheme())
-	                    .setPort(uriInfo.getRequestUri().getPort())
-	                    .setPath("/fcrepo/rest/aspace").build().toString();
-	        } catch (URISyntaxException e) {
-	            throw new RuntimeException(e);
-	        }
-    }
-
-    private FusekiReader getTriplestore(UriInfo uriInfo) {
-        if (fusekiReader == null) {
-    		try {
-                fusekiReader = new FusekiReader(new URIBuilder()
-                		.setHost(url == null ? uriInfo.getRequestUri().getHost() : url.getHost())
-                        .setScheme(uriInfo.getRequestUri().getScheme())
-                        .setPort(uriInfo.getRequestUri().getPort())
-                        .setPath("/fuseki/fcrepo").build().toString());
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return fusekiReader;
     }
 
     @GET
@@ -90,12 +54,11 @@ public class AView {
         VelocityContext context = new VelocityContext();
         context.put("accessionRoot", getASpaceURI(uriInfo));
         context.put("helper", helper);
-    	context.put("accessions", getTriplestore(uriInfo).getQueryResponse("PREFIX fcrepo: <http://fedora.info/definitions/v4/repository#>\n" +
-                "\n" +
+    	context.put("accessions", getTriplestore(uriInfo).getQueryResponse("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
                 "SELECT ?a \n" +
                 "WHERE {\n" +
-                "    ?a fcrepo:hasParent <http://" + (url == null ? uriInfo.getRequestUri().getHost() : url.getHost()) + ":8080/fcrepo/rest/aspace>\n" +
-    			"}"));
+                "  ?a rdf:type <http://ontology.lib.virginia.edu/preservation#Accession> .\n" +
+                "} ORDERBY ?a "));
 
         StringWriter w = new StringWriter();
         accessionsTemplate.merge(context, w);
@@ -159,7 +122,7 @@ public class AView {
                 "\n" +
                 "SELECT ?file ?path ?filename ?mime ?size ?sha256 \n" +
                 "WHERE { {\n" +
-                "    ?bag pres4:bagName '" +  bagId + "' .\n" +
+                "    ?bag pres4:bagName '" + bagId + "' .\n" +
                 "    ?file fcrepo:hasParent ?bag .\n" +
                 "    ?file pres4:hasLocalPath ?path .\n" +
                 "    ?file ebucore:filename ?filename .\n" +
