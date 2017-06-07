@@ -78,7 +78,7 @@ public class ImageSets extends AbstractWebResource {
             imageSetContainer = new URI(p.getProperty("container"));
             client = FcrepoClient.client().credentials(p.getProperty("username"), p.getProperty("password")).throwExceptionOnFailure().build();
         } catch (FileNotFoundException e) {
-            Response.serverError().entity("Server is misconfigured!  Configuration file, \"" + configFile.toString() + "\" not found!");
+            throw new RuntimeException("Server is misconfigured!  Configuration file, \"" + configFile.toString() + "\" not found!");
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
