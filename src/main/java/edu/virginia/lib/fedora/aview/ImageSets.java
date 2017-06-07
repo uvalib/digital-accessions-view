@@ -150,6 +150,7 @@ public class ImageSets extends AbstractWebResource {
                 "  OPTIONAL {\n" +
                 "    ?proxy <http://www.openarchives.org/ore/terms/proxyFor> ?uri .\n" +
                 "    ?proxy <http://www.iana.org/assignments/relation/prev> ?prevProxy .\n" +
+                "    ?proxy <http://www.openarchives.org/ore/terms/proxyIn> ?imageSet .\n" +
                 "    ?prevProxy <http://www.openarchives.org/ore/terms/proxyFor> ?prev .\n" +
                 "  }\n" +
                 "}";
