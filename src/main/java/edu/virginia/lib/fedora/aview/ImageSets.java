@@ -2,6 +2,7 @@ package edu.virginia.lib.fedora.aview;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.fcrepo.client.FcrepoClient;
 import org.fcrepo.client.FcrepoOperationFailedException;
@@ -204,25 +205,33 @@ public class ImageSets extends AbstractWebResource {
         Model m = createDefaultModel();
         final Resource collection = createResource("");
         m.add(collection, RDF_TYPE, IMAGE_SET);
-        m.add(collection, DC_ID, createStringLiteral(new BigInteger(130, new SecureRandom()).toString(32)));
-        for (int i = 0; i < array.size(); i ++) {
+        //m.add(collection, DC_ID, createStringLiteral(new BigInteger(130, new SecureRandom()).toString(32)));
+        
+        //First element in array is the name
+        if (!((JsonValue)array.get(0)).getValueType().equals(JsonValue.ValueType.STRING)) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Array must only contain Strings!").build();
+        } else {
+        	m.add(collection, DC_ID, (RDFNode)array.get(0));
+        }
+        
+        for (int i = 1; i < array.size(); i ++) {
             JsonValue v = array.get(i);
             if (!v.getValueType().equals(JsonValue.ValueType.STRING)) {
                 return Response.status(Response.Status.BAD_REQUEST).entity("Array must only contain Strings!").build();
             }
-            final Resource fragment = createResource("#" + i);
+            final Resource fragment = createResource("#" + (i - 1));
             m.add(collection, PCDM_HAS_MEMBER, createResource(array.getString(i)));
             m.add(fragment, RDF_TYPE, ORE_PROXY);
             m.add(fragment, ORE_PROXY_FOR, createResource(array.getString(i)));
             m.add(fragment, ORE_PROXY_IN, collection);
-            if (i == 0) {
+            if (i == 1) {
                 m.add(collection, IANA_FIRST, fragment);
             }
             if (i == array.size() -1) {
                 m.add(collection, IANA_LAST, fragment);
             }
-            if (i > 0) {
-                final Resource previous = createResource("#" + (i - 1));
+            if (i > 1) {
+                final Resource previous = createResource("#" + (i - 2));
                 m.add(fragment, IANA_PREV, previous);
                 m.add(previous, IANA_NEXT, fragment);
             }

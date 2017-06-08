@@ -3,20 +3,39 @@ var uriList = []; //Unique URI sent to server
 
 
 
+/* Disables 'Add' buttons for files that aren't images and calls noImageCheck
+to generate 'None' row. */
+
+function init() {
+	var fileTableRows = document.getElementsByTagName('table')[0].getElementsByTagName('tr');
+	for (i = 1; i < fileTableRows.length; i++) {
+		if (!fileTableRows[i].children[2].innerHTML.startsWith("image")) { //mime
+			fileTableRows[i].children[3].children[0].disabled = true;
+		}
+	}
+	noImageCheck();
+}
+
+
+
 /* Adds a row to the selection table with the specified image. */
 
-function addRow(img, uri) {
-	//update arrays
-	imageList.push(img);
-	uriList.push(uri);
-	
-	//create row
-	var table = document.getElementById('selectionTable');
-	var newRow = table.insertRow(table.getElementsByTagName("tr").length - 1);
-	
-	populateRow(newRow, img, uri);
-	checkDuplicates();
-	noImageCheck();
+function addRow(img, uri, mime) {
+	if (mime.startsWith("image")) {
+		//update arrays
+		imageList.push(img);
+		uriList.push(uri);
+		
+		//create row
+		var table = document.getElementById('selectionTable');
+		var newRow = table.insertRow(table.getElementsByTagName("tr").length - 1);
+		
+		populateRow(newRow, img, uri);
+		checkDuplicates();
+		noImageCheck();
+	} else {
+		alert("Error: File is not an image.");
+	}
 }
 
 
@@ -53,7 +72,7 @@ function moveRow(button, up, end) {
 	
 	//get index of row
 	var currentRow = row;
-	var index = -2; //-1 because the first row is the header. -2 because... magic.
+	var index = -2; //-1 because the first row is the header. -2 because tbody?
 	while (currentRow.previousSibling != null) {
 		currentRow = currentRow.previousSibling;
 		index++;
@@ -120,12 +139,14 @@ function moveRow(button, up, end) {
 
 
 
-/* Adds a "-None-" row to the selection table and disables
-"Create Image Set" button if there are no selected images. */
+/* Adds a "-None-" row to the selection table if empty and
+calls disableCreateButton. */
 
 function noImageCheck() {
 	var table = document.getElementById('selectionTable');
 	var createButton = document.getElementById('createButton');
+	
+	disableCreateButton();
 	
 	//if selection is empty
 	if (table.getElementsByTagName("tr").length == 2) {
@@ -139,24 +160,35 @@ function noImageCheck() {
 		
 		noneRow.appendChild(textCell);
 		noneRow.id = "noneRow";
-		
-		//disable "Create Image Set" button
-		createButton.disabled = true;
 	} else {
 		//remove "-None-" row
 		document.getElementById("noneRow").remove();
-		
-		//enable "Create Image Set" button
-		createButton.disabled = false;
 	}
 }
 
 
 
+/* Disables the createButton if there is no selection or no name. */
+
+function disableCreateButton() {
+	var table = document.getElementById('selectionTable');
+	var createButton = document.getElementById('createButton');
+	var imageSetName = document.getElementById('imageSetName');
+	
+	if (table.getElementsByTagName("tr").length == 2 || imageSetName.value === "") {
+		createButton.disabled = true;
+	} else {
+		createButton.disabled = false;
+	}
+}
+
 /* Sends uriList to server as a string for image set creation. */
 
 function createImageSet() {
-	if (uriList.length != 0) {
+	if (uriList.length != 0 && document.getElementById('imageSetName').value !== "") {
+		var table = document.getElementById('selectionTable');
+		var imageSetName = document.getElementById('imageSetName').value;
+		
 		//convert array to string
 		var uriString = "[ ";
 		for (i = 0; i < uriList.length; i++) {
@@ -169,13 +201,32 @@ function createImageSet() {
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState == 4 && this.status != 200) {
 				alert("Error: Status code " + this.status + ", ready state " + xhr.readyState + ".");
+				document.getElementById('p').innerHTML = "Error: Status code " +this.status  + ".";
+			} else if (this.status == 200) {
+				for (i = 0; i < uriList.length; i++) {
+					table.children[0].children[1].remove();
+				}
+				uriList.length = 0;
+				imageList.length = 0;
+				document.getElementById('imageSetName').value = "";
+				
+				checkDuplicates();
+				noImageCheck();
+						
+				document.getElementById('p').innerHTML = "Image set saved successfully.";
 			}
 		}
 		
 		xhr.open("POST", "/accessions/image-sets", true);
 		xhr.send(uriString);
+		
+		document.getElementById('p').innerHTML = "Processing...";
 	} else {
-		alert("Error: uriList is empty; no data to send.");
+		if (uriList.length == 0) {
+			alert("Error: uriList is empty; no data to send.");
+		} else {
+			alert("Error: Image set name is empty.");
+		}
 	}
 }
 
@@ -253,7 +304,7 @@ function checkDuplicates() {
 	var duplicates = [];
 	var current;
 	var exemptList = [];
-	var duplicateWarning = document.getElementById('duplicateWarning');
+	var p = document.getElementById('p');
 	
 	//go through all rows
 	for (i = 0; i < uriList.length; i++) {
@@ -313,7 +364,7 @@ function checkDuplicates() {
 			}
 		}
 		
-		duplicateWarning.innerHTML = "Warning: " + duplicates.length +
+		p.innerHTML = "Warning: " + duplicates.length +
 				(duplicates.length == 1 ? " set " : " sets ") +
 				"of duplicates detected.";
 	} else {
@@ -327,6 +378,6 @@ function checkDuplicates() {
 			cell.style.display = "none";
 		}
 		
-		duplicateWarning.innerHTML = "";
+		p.innerHTML = "";
 	}
 }

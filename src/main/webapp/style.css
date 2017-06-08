@@ -4,6 +4,7 @@ body {
 
 table {
     border: 2px solid #501040;
+	margin-right: 5px;
 }
 
 th {

@@ -4,42 +4,50 @@
       <link rel="stylesheet" type="text/css" href="/style.css">
       <script type="text/javascript" src="/main.js"></script>
   </head>
-  <body onload="noImageCheck()">
+  <body onload="init();">
     <div class="breadcrumbs"><a href="/accessions">Accessions</a> <span class="hierarchy-separator" /> <a href="/accessions/$aname">$aname</a> <span class="hierarcy-separator" /><h1>$bname</h1></div>
     <dl>
         <dt>Title</dt>
         <dd>$btitle</dd>
     </dl>
-    <table style="float:left; margin-right:5px;">
-        <tr><th>File Path</th><th>Size</th><th>Mime Type</th><th>Add</th></tr>
-        #foreach( $f in $files )
-            #set( $furi = $f["file"] )
-            #if ($f["size"] == "")
-              <tr class="missing-file">
-                <td>$f["path"]</td>
-                <td>(not in fedora)</td>
-            #else
-              <tr>
-                <td><a href="$furi">$f["path"]</a></td>
-                <td>$f["size"]</td>
-            #end
-              <td>$f["mime"]</td>
-              <td><button type="button" title="Add image to selection" onclick="addRow(&quot;$f["path"]&quot;,&quot;$f["file"]&quot;)">Add</button></td>
-            </tr>
-        #end
-    </table>
     
-    <table id="selectionTable">
-    	<tr>
-    		<th>Move</th>
-    		<th>Selected Files</th>
-    		<th>Remove</th>
-    		<th style="display: none;">D</th>
-    	</tr>
-    	<tr>
-    		<td colspan="4"><button type="button" id="createButton" title="Create image set from selection" onClick="createImageSet()">Create Image Set</button></td>
-    	</tr>
-    </table>
-    <p id="duplicateWarning"></p>
+    <div style="float:left;">
+	    <table style="float:left;">
+	        <tr><th>File Path</th><th>Size</th><th>Mime Type</th><th>Add</th></tr>
+	        #foreach( $f in $files )
+	            #set( $furi = $f["file"] )
+	            #if ($f["size"] == "")
+	              <tr class="missing-file">
+	                <td>$f["path"]</td>
+	                <td>(not in fedora)</td>
+	            #else
+	              <tr>
+	                <td><a href="$furi">$f["path"]</a></td>
+	                <td>$f["size"]</td>
+	            #end
+	              <td>$f["mime"]</td>
+	              <td><button type="button" title="Add image to selection" onclick="addRow(&quot;$f["path"]&quot;,&quot;$f["file"]&quot;,&quot;$f["mime"]&quot;)">Add</button></td>
+	            </tr>
+	        #end
+	    </table>
+	    
+	    <table id="selectionTable">
+	    	<tr>
+	    		<th>Move</th>
+	    		<th>Selected Files</th>
+	    		<th>Remove</th>
+	    		<th style="display: none;">D</th>
+	    	</tr>
+	    	<tr>
+	    		<td colspan="4">
+	    			<button type="button" id="createButton" title="Create image set from selection" onClick="createImageSet()">Create Image Set</button>
+	    			<input type="text" placeholder="Image Set Name" title="Image set name" id="imageSetName" onKeyUp="disableCreateButton();">
+	    		</td>
+	    	</tr>
+	    </table>
+	    
+	    <p id="p"></p>
+	    
+    </div>
   </body>
 </html>
