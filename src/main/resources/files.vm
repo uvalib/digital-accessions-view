@@ -48,7 +48,7 @@
 	    </table>
 	    
 	    <p id="p"></p>
-	    
+	    <p id="debug"></p>
     </div>
   </body>
 </html>

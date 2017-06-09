@@ -47,15 +47,15 @@ the corresponding imageList and uriList entries. */
 function removeRow(button) {
 	var row = button.parentNode.parentNode;
 	
-	var uri = button.parentNode.nextSibling.innerHTML;
-	
-	for (i = 0; i < uriList.length; i++) {
-		if (uriList[i] == uri) {
-			uriList.splice(i, 1);
-			imageList.splice(i, 1);
-			break;
-		}
+	var currentRow = row;
+	var index = -2; //-1 because the first row is the header. -2 because tbody?
+	while (currentRow.previousSibling != null) {
+		currentRow = currentRow.previousSibling;
+		index++;
 	}
+	
+	uriList.splice(index, 1);
+	imageList.splice(index, 1);
 	
 	row.remove();
 	checkDuplicates();
@@ -163,7 +163,9 @@ function noImageCheck() {
 		noneRow.id = "noneRow";
 	} else {
 		//remove "-None-" row
-		document.getElementById("noneRow").remove();
+		if (document.getElementById('noneRow') != null) {
+			document.getElementById('noneRow').remove();
+		}
 	}
 }
 
