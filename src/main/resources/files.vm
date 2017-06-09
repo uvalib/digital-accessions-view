@@ -10,7 +10,8 @@
         <dt>Title</dt>
         <dd>$btitle</dd>
     </dl>
-    
+    <p>Image set description stub.</p>
+    <p id="imageSetCount">There are currently <a href="">X image sets of this bag.</a></p>
     <div style="float:left;">
 	    <table style="float:left;">
 	        <tr><th>File Path</th><th>Size</th><th>Mime Type</th><th>Add</th></tr>

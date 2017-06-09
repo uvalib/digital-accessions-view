@@ -13,6 +13,7 @@ function init() {
 			fileTableRows[i].children[3].children[0].disabled = true;
 		}
 	}
+	getNumberOfImageSets();
 	noImageCheck();
 }
 
@@ -196,6 +197,12 @@ function createImageSet() {
 		}
 		uriString = uriString.slice(0, -2) + " ]";
 		
+		//var jsonObject = "{ \"name\":\"" + imageSetName + "\", \"uriList\":" + uriString + " }";
+		var jsonObject = JSON.stringify({"name":imageSetName,"uriList":uriList})
+		//var obj = JSON.parse(jsonObject); 
+		
+		//alert(jsonObject.uriList);
+		
 		//create AJAX server request
 		var xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function() {
@@ -218,7 +225,7 @@ function createImageSet() {
 		}
 		
 		xhr.open("POST", "/accessions/image-sets", true);
-		xhr.send(uriString);
+		xhr.send(jsonObject);
 		
 		document.getElementById('p').innerHTML = "Processing...";
 	} else {
@@ -380,4 +387,26 @@ function checkDuplicates() {
 		
 		p.innerHTML = "";
 	}
+}
+
+function getNumberOfImageSets() {
+	//create AJAX server request
+	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4 && this.status != 200) {
+			document.getElementById('imageSetCount').innerHTML = "Error retrieving image sets: Status code " +this.status  + ".";
+		} else if (this.status == 200) {
+			var imageSets = JSON.parse(xhr.responseText);
+			document.getElementById('imageSetCount').innerHTML = "There " +
+					(Object.keys(imageSets).length == 1 ?
+					"is currently <a href=\"\">1 image set of the current bag.</a>" :
+					"are currently <a href=\"\">" + Object.keys(imageSets).length +
+					" image sets of the current bag.</a>");
+		}
+	}
+	
+	xhr.open("GET", "/accessions/image-sets/find", true);
+	xhr.send();
+	
+	document.getElementById('imageSetCount').innerHTML = "Fetching image set data...";
 }

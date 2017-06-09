@@ -85,7 +85,8 @@ public class ImageSets extends AbstractWebResource {
         }
 
         try {
-            if (client.head(imageSetContainer).perform().getStatusCode() == 404) {
+        	
+            if (FcrepoClient.client().credentials(p.getProperty("username"), p.getProperty("password")).build().head(imageSetContainer).perform().getStatusCode() == 404) {
                 System.out.println("Unable to find image set container, creating a new one!");
                 client.put(imageSetContainer).perform();
             }
@@ -200,38 +201,35 @@ public class ImageSets extends AbstractWebResource {
     public Response createImageSet(InputStream jsonInput) {
 
         JsonReader jsonReader = Json.createReader(jsonInput);
-        JsonArray array = jsonReader.readArray();
-
+        JsonObject object = jsonReader.readObject();
+        JsonArray array = object.getJsonArray("uriList");
+        
         Model m = createDefaultModel();
         final Resource collection = createResource("");
         m.add(collection, RDF_TYPE, IMAGE_SET);
         //m.add(collection, DC_ID, createStringLiteral(new BigInteger(130, new SecureRandom()).toString(32)));
         
-        //First element in array is the name
-        if (!((JsonValue)array.get(0)).getValueType().equals(JsonValue.ValueType.STRING)) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("Array must only contain Strings!").build();
-        } else {
-        	m.add(collection, DC_ID, (RDFNode)array.get(0));
-        }
+        //First element in object is the name
+        m.add(collection, DC_ID, object.getString("name"));
         
-        for (int i = 1; i < array.size(); i ++) {
+        for (int i = 0; i < array.size(); i ++) {
             JsonValue v = array.get(i);
             if (!v.getValueType().equals(JsonValue.ValueType.STRING)) {
                 return Response.status(Response.Status.BAD_REQUEST).entity("Array must only contain Strings!").build();
             }
-            final Resource fragment = createResource("#" + (i - 1));
+            final Resource fragment = createResource("#" + i);
             m.add(collection, PCDM_HAS_MEMBER, createResource(array.getString(i)));
             m.add(fragment, RDF_TYPE, ORE_PROXY);
             m.add(fragment, ORE_PROXY_FOR, createResource(array.getString(i)));
             m.add(fragment, ORE_PROXY_IN, collection);
-            if (i == 1) {
+            if (i == 0) {
                 m.add(collection, IANA_FIRST, fragment);
             }
-            if (i == array.size() -1) {
+            if (i == array.size() - 1) {
                 m.add(collection, IANA_LAST, fragment);
             }
-            if (i > 1) {
-                final Resource previous = createResource("#" + (i - 2));
+            if (i > 0) {
+                final Resource previous = createResource("#" + (i - 1));
                 m.add(fragment, IANA_PREV, previous);
                 m.add(previous, IANA_NEXT, fragment);
             }
