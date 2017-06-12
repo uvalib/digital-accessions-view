@@ -5,13 +5,13 @@
       <script type="text/javascript" src="/main.js"></script>
   </head>
   <body onload="init();">
-    <div class="breadcrumbs"><a href="/accessions">Accessions</a> <span class="hierarchy-separator" /> <a href="/accessions/$aname">$aname</a> <span class="hierarcy-separator" /><h1>$bname</h1></div>
+    <div class="breadcrumbs"><a href="/accessions">Accessions</a> <span class="hierarchy-separator" /> <a href="/accessions/$aname">$aname</a><span class="hierarchy-separator" /><h1>$bname</h1></div>
     <dl>
         <dt>Title</dt>
         <dd>$btitle</dd>
     </dl>
     <p>Image set description stub.</p>
-    <p id="imageSetCount">There are currently <a href="">X image sets of this bag.</a></p>
+    <p id="imageSetCount"></p>
     <div style="float:left;">
 	    <table style="float:left;">
 	        <tr><th>File Path</th><th>Size</th><th>Mime Type</th><th>Add</th></tr>

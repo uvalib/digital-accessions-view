@@ -1,10 +1,38 @@
 <html>
 	<head>
-		<title>$aname : Bag $bname</title>
+		<title>$aname : Bag $bname Image Sets</title>
 		<link rel="stylesheet" type="text/css" href="/style.css">
 		<script type="text/javascript" src="/main.js"></script>
 	</head>
 	<body>
-	
+		<div class="breadcrumbs">
+			<a href="/accessions">Accessions</a>
+			<span class="hierarchy-separator" />
+			<a href="/accessions/$aname">$aname</a>
+			<span class="hierarchy-separator" />
+			<a href="/accessions/$aname/bags/$bname">$bname</a>
+			<span class="hierarchy-separator" />
+			<h1>Image sets of $bname</h1>
+		</div>
+	    <dl>
+	        <dt>Title</dt>
+	        <dd>$btitle</dd>
+	    </dl>
+		<table style="float:left;">
+	        <tr><th>Set Name</th><th>Date Created</th></tr>
+	        #foreach( $i in $imageSets )
+	            #set( $id = $i["id"] )
+	            #if ($i["size"] == "")
+	              <tr class="missing-file">
+	                <td>$i["id"]</td>
+	                <td>(not in fedora)</td>
+	            #else
+	              <tr>
+	                <td><a href=$i["uri"]>$i["id"]</a></td>
+	                <td>$i["date"]</td>
+	            #end
+	            </tr>
+	        #end
+	    </table>
 	</body>
 </html>

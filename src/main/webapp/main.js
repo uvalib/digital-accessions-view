@@ -147,8 +147,6 @@ function noImageCheck() {
 	var table = document.getElementById('selectionTable');
 	var createButton = document.getElementById('createButton');
 	
-	disableCreateButton();
-	
 	//if selection is empty
 	if (table.getElementsByTagName("tr").length == 2) {
 		//add "-None-" indication row
@@ -167,6 +165,8 @@ function noImageCheck() {
 			document.getElementById('noneRow').remove();
 		}
 	}
+	
+	disableCreateButton();
 }
 
 
@@ -178,7 +178,7 @@ function disableCreateButton() {
 	var createButton = document.getElementById('createButton');
 	var imageSetName = document.getElementById('imageSetName');
 	
-	if (table.getElementsByTagName("tr").length == 2 || imageSetName.value === "") {
+	if (document.getElementById('noneRow') != null || imageSetName.value === "") {
 		createButton.disabled = true;
 	} else {
 		createButton.disabled = false;
@@ -198,13 +198,9 @@ function createImageSet() {
 			uriString += "\"" + uriList[i] + "\", ";
 		}
 		uriString = uriString.slice(0, -2) + " ]";
-		
-		//var jsonObject = "{ \"name\":\"" + imageSetName + "\", \"uriList\":" + uriString + " }";
+
 		var jsonObject = JSON.stringify({"name":imageSetName,"uriList":uriList})
-		//var obj = JSON.parse(jsonObject); 
-		
-		//alert(jsonObject.uriList);
-		
+
 		//create AJAX server request
 		var xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function() {
@@ -221,7 +217,8 @@ function createImageSet() {
 				
 				checkDuplicates();
 				noImageCheck();
-						
+				setTimeout(function(){getNumberOfImageSets();}, 5000); //server takes time to update
+				
 				document.getElementById('p').innerHTML = "Image set saved successfully.";
 			}
 		}
@@ -401,8 +398,8 @@ function getNumberOfImageSets() {
 			var imageSets = JSON.parse(xhr.responseText);
 			document.getElementById('imageSetCount').innerHTML = "There " +
 					(Object.keys(imageSets).length == 1 ?
-					"is currently <a href=\"\">1 image set of the current bag.</a>" :
-					"are currently <a href=\"\">" + Object.keys(imageSets).length +
+					"is currently <a href=\"" + window.location.href  + "/imageSets" + "\">1 image set of the current bag.</a>" :
+					"are currently <a href=\"" + window.location.href  + "/imageSets" + "\">" + Object.keys(imageSets).length +
 					" image sets of the current bag.</a>");
 		}
 	}

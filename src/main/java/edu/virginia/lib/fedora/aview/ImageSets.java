@@ -4,6 +4,11 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.fcrepo.client.FcrepoClient;
 import org.fcrepo.client.FcrepoOperationFailedException;
 
@@ -31,6 +36,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -70,6 +76,8 @@ public class ImageSets extends AbstractWebResource {
     private FusekiReader fusekiReader;
 
     private URI imageSetContainer;
+    
+    private Template imageSetsTemplate;
 
     public ImageSets() throws IOException {
         final Properties p = new Properties();
@@ -95,12 +103,18 @@ public class ImageSets extends AbstractWebResource {
             throw new RuntimeException(e);
         }
 
+        VelocityEngine ve = new VelocityEngine();
+        ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
+        ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
+        ve.init();
+        
+        imageSetsTemplate = ve.getTemplate("imageSets.vm");
     }
 
     @GET
     @Produces("application/json")
     @Path("image-sets")
-    public Response listAllImageSes(@Context UriInfo uriInfo, @Context HttpServletRequest request) throws IOException {
+    public Response listAllImageSets(@Context UriInfo uriInfo, @Context HttpServletRequest request) throws IOException {
         return findImageSetsForBagId(null, uriInfo, request);
     }
 
@@ -111,7 +125,11 @@ public class ImageSets extends AbstractWebResource {
         if (bagName != null && bagName.contains("'")) {
             return Response.status(Response.Status.BAD_REQUEST).entity("Invalid bagName \"" + bagName + "\"").build();
         }
-        final String sparqlQuery = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+        return Response.ok().entity(getImageSetsArray(bagName, uriInfo)).build();
+    }
+    
+    private JsonArray getImageSetsArray(String bagName, UriInfo uriInfo) throws IOException {
+    	final String sparqlQuery = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
                 "SELECT DISTINCT ?imageSet ?id ?date\n" +
                 "WHERE {\n" +
                 "  ?imageSet rdf:type <http://ontology.lib.virginia.edu/presentation#ImageSet> .\n" +
@@ -128,12 +146,38 @@ public class ImageSets extends AbstractWebResource {
             JsonObjectBuilder o = Json.createObjectBuilder();
             o.add("id", set.get("id"));
             o.add("uri", set.get("imageSet"));
-            o.add("date", set.get("date"));
+            o.add("date", set.get("date"));;
             a.add(o.build());
         }
-        return Response.ok().entity(a.build()).build();
+        
+        return a.build();
     }
-
+    
+	@GET
+	@Path("/{accessionId: [^/]*}/bags/{bagId: [^/]*}/imageSets")
+	public Response listImageSets(@PathParam("accessionId") final String accessionId, @PathParam("bagId") final String bagId, @Context UriInfo uriInfo) throws IOException {
+		VelocityContext context = new VelocityContext();
+		
+		context.put("aname", accessionId);
+		context.put("bname", bagId);
+		context.put("btitle", getTriplestore(uriInfo).getFirstAndOnlyQueryResponse("PREFIX dc: <http://purl.org/dc/elements/1.1/>\n" +
+                "PREFIX pres4: <http://ontology.lib.virginia.edu/preservation#>\n" +
+                "SELECT ?title\n" +
+                "WHERE {\n" +
+                "    ?bag dc:title ?title .\n" +
+                "    ?bag pres4:bagName '" + bagId + "' .\n" +
+                "}").get("title"));
+		
+		
+		JsonArray array = getImageSetsArray(bagId, uriInfo);
+		
+		context.put("imageSets", array);
+		
+		StringWriter w = new StringWriter();
+        imageSetsTemplate.merge(context, w);
+		return Response.ok().encoding("UTF-8").entity(w.toString()).build();
+	}
+    
     @GET
     @Produces("application/json")
     @Path("image-sets/{setId: [^/]*}")

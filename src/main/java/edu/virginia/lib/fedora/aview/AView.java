@@ -30,7 +30,6 @@ public class AView extends AbstractWebResource {
     private Template accessionsTemplate;
     private Template bagsTemplate;
     private Template filesTemplate;
-    private Template imageSetsTemplate;
 
     private DisplayHelper helper;
 
@@ -46,7 +45,6 @@ public class AView extends AbstractWebResource {
         accessionsTemplate = ve.getTemplate("accessions.vm");
         bagsTemplate = ve.getTemplate("bags.vm");
         filesTemplate = ve.getTemplate("files.vm");
-
     }
 
     @GET
@@ -136,23 +134,4 @@ public class AView extends AbstractWebResource {
         filesTemplate.merge(context, w);
         return Response.ok().encoding("UTF-8").entity(w.toString()).build();
     }
-/*
-	@GET
-	@Path("/{accessionId: [^/]*}/bags/{bagId: [^/]*}")
-	public Response listImageSets(@PathParam("accessionId") final String accessionId, @PathParam("bagId") final String bagId, @Context UriInfo uriInfo) throws IOException {
-		VelocityContext context = new VelocityContext();
-		
-		context.put("aname", accessionId);
-		context.put("bname", bagId);
-		
-		
-		
-		StringWriter w = new StringWriter();
-        imageSetsTemplate.merge(context, w);
-		return Response.ok().encoding("UTF-8").entity(w.toString()).build();
-	}
-*/
-
-
-
 }
