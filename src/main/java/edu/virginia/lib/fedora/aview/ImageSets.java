@@ -242,7 +242,7 @@ public class ImageSets extends AbstractWebResource {
      */
     @POST
     @Path("image-sets")
-    public Response createImageSet(InputStream jsonInput) {
+    public Response createOrUpdateImageSet(InputStream jsonInput, @QueryParam("setId") final String imageSetUriStr) {
 
         JsonReader jsonReader = Json.createReader(jsonInput);
         JsonObject object = jsonReader.readObject();
@@ -284,10 +284,18 @@ public class ImageSets extends AbstractWebResource {
 
         // Post the content to fedora
         try {
-            client.post(imageSetContainer).body(new ByteArrayInputStream(baos.toByteArray()), "text/rdf+n3").perform();
+            if (imageSetUriStr == null) {
+                // create a new image set
+                client.post(imageSetContainer).body(new ByteArrayInputStream(baos.toByteArray()), "text/rdf+n3").perform();
+            } else {
+                // replace the existing image set
+                client.put(new URI(imageSetUriStr)).body(new ByteArrayInputStream(baos.toByteArray()), "text/rdf+n3").perform();
+            }
         } catch (FcrepoOperationFailedException e) {
             e.printStackTrace();
             return Response.serverError().encoding(e.getMessage()).build();
+        } catch (URISyntaxException e) {
+            return Response.status(400).entity("setId parameter must be a valid URI!").build();
         }
         return Response.ok().build();
     }
