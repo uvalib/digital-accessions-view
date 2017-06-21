@@ -5,7 +5,7 @@
       <script type="text/javascript" src="/main.js"></script>
   </head>
   <body onload="init();">
-    <div class="breadcrumbs"><a href="/accessions">Accessions</a> <span class="hierarchy-separator" /> <a href="/accessions/$aname">$aname</a><span class="hierarchy-separator" /><h1>$bname</h1></div>
+    <div class="breadcrumbs"><a href="/accessions">Accessions</a> <span class="hierarchy-separator" /> <a href="/accessions/$aname">$aname</a> <span class="hierarchy-separator" /><h1>$bname</h1></div>
     <dl>
         <dt>Title</dt>
         <dd>$btitle</dd>
@@ -41,8 +41,8 @@
 	    	</tr>
 	    	<tr>
 	    		<td colspan="4">
-	    			<button type="button" id="createButton" title="Create image set from selection" onClick="createImageSet()">Create Image Set</button>
-	    			<input type="text" placeholder="Image Set Name" title="Image set name" id="imageSetName" onKeyUp="disableCreateButton();">
+	    			<button type="button" id="createButton" title="Create image set from selection" onClick="checkName()">Create Image Set</button>
+	    			<input type="text" placeholder="Image Set Name" title="Image set name" id="imageSetName" onKeyUp="disableCreateButton();" />
 	    		</td>
 	    	</tr>
 	    </table>
