@@ -1,9 +1,10 @@
 var imageList = []; //Potentially non-unique file path shown to user
 var uriList = []; //Unique URI sent to server
 
+var duplicate = false; //Flag for duplicate images in selection
 
-
-/* Disables 'Add' buttons for files that aren't images and calls noImageCheck
+/* Disables 'Add' buttons for files that aren't images,
+loads image set if relevant, and calls noImageCheck
 to generate 'None' row. */
 
 function init() {
@@ -13,6 +14,39 @@ function init() {
 			fileTableRows[i].children[3].children[0].disabled = true;
 		}
 	}
+	
+	document.getElementById('imageSetName').value = "";
+	
+	//check for edit variable in url
+	if (window.location.href.indexOf("?edit") != -1) {
+		var imageSetId = window.location.href.substring(window.location.href.indexOf("?edit") + 6);
+		//get image set for id, load images into table
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState == 4 && this.status != 200) {
+				document.getElementById('p').innerHTML = "Error retrieving image set: Status code " + this.status  + ".";
+			} else if (xhr.readyState == 4 && this.status == 200) {
+				var images = JSON.parse(xhr.responseText);
+				document.getElementById('imageSetName').value = imageSetId;
+				
+				//only does one pass unless delcared with "var i"
+				for (var i = 0; i < images.length; i++) {
+					addRow(images[i]["filename"].toString(), images[i]["uri"].toString(), images[i]["mimetype"].toString());
+				}
+				
+				window.history.pushState("state", "", window.location.href.substring(0, window.location.href.indexOf("?"))); //trim off variable
+				
+				document.getElementById('p').innerHTML = "Loaded image set.";
+			}
+		}
+		
+		xhr.open("GET", "/accessions/image-sets/" + imageSetId, true);
+		xhr.send();
+		
+		document.getElementById('p').innerHTML = "Working...";
+		
+	}
+	
 	getNumberOfImageSets();
 	noImageCheck();
 }
@@ -178,19 +212,54 @@ function disableCreateButton() {
 	var createButton = document.getElementById('createButton');
 	var imageSetName = document.getElementById('imageSetName');
 	
-	if (document.getElementById('noneRow') != null || imageSetName.value === "") {
+	if (document.getElementById('noneRow') != null || imageSetName.value === "" ||
+			duplicate) {
 		createButton.disabled = true;
 	} else {
 		createButton.disabled = false;
 	}
 }
 
+
+
+/* Checks availability of image set name before calling createImageSet */
+
+function checkName() {
+	var imageSetName = document.getElementById('imageSetName').value.replace(" ", "_");
+	
+	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4 && this.status != 200) {
+			document.getElementById('imageSetCount').innerHTML = "Error retrieving image sets: Status code " + this.status  + ".";
+		} else if (xhr.readyState == 4 && this.status == 200) {
+			var imageSets = JSON.parse(xhr.responseText);
+			var create = true;
+			for (i = 0; i < imageSets.length; i++) {
+				if (imageSets[i]["id"] === imageSetName) {
+					create = confirm("An image set named \"" + imageSetName +
+							"\" already exists. Press 'OK' to overwrite.");
+					document.getElementById('p').innerHTML = "Image set creation cancelled.";
+					break;
+				}
+			}
+			if (create) {
+				createImageSet();
+			}
+		}
+	}
+	xhr.open("GET", "/accessions/image-sets/find", true);
+	xhr.send();
+	document.getElementById('p').innerHTML = "Processing...";
+}
+
+
+
 /* Sends uriList to server as a string for image set creation. */
 
 function createImageSet() {
-	if (uriList.length != 0 && document.getElementById('imageSetName').value !== "") {
+	if (uriList.length != 0 && document.getElementById('imageSetName').value !== "" && !duplicate) {
 		var table = document.getElementById('selectionTable');
-		var imageSetName = document.getElementById('imageSetName').value;
+		var imageSetName = document.getElementById('imageSetName').value.replace(" ", "_");
 		
 		//convert array to string
 		var uriString = "[ ";
@@ -207,7 +276,7 @@ function createImageSet() {
 			if (xhr.readyState == 4 && this.status != 200) {
 				alert("Error: Status code " + this.status + ", ready state " + xhr.readyState + ".");
 				document.getElementById('p').innerHTML = "Error: Status code " +this.status  + ".";
-			} else if (this.status == 200) {
+			} else if (xhr.readyState == 4 && this.status == 200) {
 				for (i = 0; i < uriList.length; i++) {
 					table.children[0].children[1].remove();
 				}
@@ -215,9 +284,9 @@ function createImageSet() {
 				imageList.length = 0;
 				document.getElementById('imageSetName').value = "";
 				
+				setTimeout(function(){getNumberOfImageSets();}, 7500); //server takes time to update
 				checkDuplicates();
 				noImageCheck();
-				setTimeout(function(){getNumberOfImageSets();}, 5000); //server takes time to update
 				
 				document.getElementById('p').innerHTML = "Image set saved successfully.";
 			}
@@ -225,13 +294,16 @@ function createImageSet() {
 		
 		xhr.open("POST", "/accessions/image-sets", true);
 		xhr.send(jsonObject);
-		
-		document.getElementById('p').innerHTML = "Processing...";
 	} else {
 		if (uriList.length == 0) {
-			alert("Error: uriList is empty; no data to send.");
+			alert("Error: Selection is empty.");
+			document.getElementById('p').innerHTML = "Error: Selection is empty.";
+		} else if (duplicate) {
+			alert("Error: Image selection contains duplicates.");
+			document.getElementById('p').innerHTML = "Error: Image selection contains duplicates";
 		} else {
 			alert("Error: Image set name is empty.");
+			document.getElementById('p').innerHTML = "Error: Image set name is empty.";
 		}
 	}
 }
@@ -370,6 +442,7 @@ function checkDuplicates() {
 			}
 		}
 		
+		duplicate = true;
 		p.innerHTML = "Warning: " + duplicates.length +
 				(duplicates.length == 1 ? " set " : " sets ") +
 				"of duplicates detected.";
@@ -384,6 +457,7 @@ function checkDuplicates() {
 			cell.style.display = "none";
 		}
 		
+		duplicate = false;
 		p.innerHTML = "";
 	}
 }
@@ -394,13 +468,14 @@ function getNumberOfImageSets() {
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == 4 && this.status != 200) {
 			document.getElementById('imageSetCount').innerHTML = "Error retrieving image sets: Status code " +this.status  + ".";
-		} else if (this.status == 200) {
+		} else if (xhr.readyState == 4 && this.status == 200) {
 			var imageSets = JSON.parse(xhr.responseText);
+			var url = (window.location.href.indexOf("?") == -1 ? window.location.href : window.location.href.substring(0, window.location.href.indexOf("?"))) + "/imageSets";
+			
 			document.getElementById('imageSetCount').innerHTML = "There " +
 					(Object.keys(imageSets).length == 1 ?
-					"is currently <a href=\"" + window.location.href  + "/imageSets" + "\">1 image set of the current bag.</a>" :
-					"are currently <a href=\"" + window.location.href  + "/imageSets" + "\">" + Object.keys(imageSets).length +
-					" image sets of the current bag.</a>");
+					"is currently <a href=\"" + url + "\">1 image set of the current bag.</a>" :
+					"are currently <a href=\"" + url + "\">" + Object.keys(imageSets).length + " image sets of the current bag.</a>");
 		}
 	}
 	
@@ -408,4 +483,9 @@ function getNumberOfImageSets() {
 	xhr.send();
 	
 	document.getElementById('imageSetCount').innerHTML = "Fetching image set data...";
+}
+
+function editImageSet(imageSetName) {
+	var url = window.location.href.substring(0, window.location.href.lastIndexOf("/")) + "?edit=" + imageSetName;
+	window.location.href = url;
 }

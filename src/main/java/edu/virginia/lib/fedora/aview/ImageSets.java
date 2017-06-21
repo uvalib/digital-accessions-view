@@ -284,7 +284,7 @@ public class ImageSets extends AbstractWebResource {
 
         // Post the content to fedora
         try {
-            client.post(imageSetContainer).body(new ByteArrayInputStream(baos.toByteArray()), "text/rdf+n3").perform();
+        	client.post(imageSetContainer).body(new ByteArrayInputStream(baos.toByteArray()), "text/rdf+n3").perform();
         } catch (FcrepoOperationFailedException e) {
             e.printStackTrace();
             return Response.serverError().encoding(e.getMessage()).build();

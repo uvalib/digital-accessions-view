@@ -19,20 +19,23 @@
 	        <dd>$btitle</dd>
 	    </dl>
 		<table style="float:left;">
-	        <tr><th>Set Name</th><th>Date Created</th></tr>
+	        <tr><th>Set Name</th><th>Date Created</th><th>Edit</th></tr>
 	        #foreach( $i in $imageSets )
-	            #set( $id = $i["id"] )
 	            #if ($i["size"] == "")
 	              <tr class="missing-file">
 	                <td>$i["id"]</td>
 	                <td>(not in fedora)</td>
+	                <td>N/A</td>
 	            #else
 	              <tr>
 	                <td><a href=$i["uri"]>$i["id"]</a></td>
 	                <td>$i["date"]</td>
+	                <td><button type="button" id="editButton" value="Edit image set" onclick=editImageSet($i["id"])>Edit</button></td>
 	            #end
 	            </tr>
 	        #end
 	    </table>
+	    
+	    <p id="p"></p>
 	</body>
 </html>
