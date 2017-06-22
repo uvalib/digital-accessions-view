@@ -288,7 +288,10 @@ public class ImageSets extends AbstractWebResource {
                 // create a new image set
                 client.post(imageSetContainer).body(new ByteArrayInputStream(baos.toByteArray()), "text/rdf+n3").perform();
             } else {
-                // replace the existing image set
+            	// replace the existing image set
+                final URI uri = new URI(imageSetUriStr);
+                client.delete(uri).perform();
+                client.delete(new URI(imageSetUriStr + "/fcr:tombstone"));
                 client.put(new URI(imageSetUriStr)).body(new ByteArrayInputStream(baos.toByteArray()), "text/rdf+n3").perform();
             }
         } catch (FcrepoOperationFailedException e) {
