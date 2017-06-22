@@ -2,6 +2,8 @@ var imageList = []; //Potentially non-unique file path shown to user
 var uriList = []; //Unique URI sent to server
 
 var duplicate = false; //Flag for duplicate images in selection
+var imageSetId = "";
+var imageSetUri = "";
 
 /* Disables 'Add' buttons for files that aren't images,
 loads image set if relevant, and calls noImageCheck
@@ -19,7 +21,9 @@ function init() {
 	
 	//check for edit variable in url
 	if (window.location.href.indexOf("?edit") != -1) {
-		var imageSetId = window.location.href.substring(window.location.href.indexOf("?edit") + 6);
+		imageSetId = window.location.href.substring(window.location.href.indexOf("?edit") + 6, window.location.href.indexOf("&imageSetUri"));
+		imageSetUri = window.location.href.substring(window.location.href.indexOf("&imageSetUri") + 13);
+		
 		//get image set for id, load images into table
 		var xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function() {
@@ -238,7 +242,9 @@ function checkName() {
 				if (imageSets[i]["id"] === imageSetName) {
 					create = confirm("An image set named \"" + imageSetName +
 							"\" already exists. Press 'OK' to overwrite.");
-					document.getElementById('p').innerHTML = "Image set creation cancelled.";
+					if (!create) {
+						document.getElementById('p').innerHTML = "Image set creation cancelled.";
+					}
 					break;
 				}
 			}
@@ -275,7 +281,7 @@ function createImageSet() {
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState == 4 && this.status != 200) {
 				alert("Error: Status code " + this.status + ", ready state " + xhr.readyState + ".");
-				document.getElementById('p').innerHTML = "Error: Status code " +this.status  + ".";
+				document.getElementById('p').innerHTML = "Error: Status code " + this.status  + ".";
 			} else if (xhr.readyState == 4 && this.status == 200) {
 				for (i = 0; i < uriList.length; i++) {
 					table.children[0].children[1].remove();
@@ -291,9 +297,13 @@ function createImageSet() {
 				document.getElementById('p').innerHTML = "Image set saved successfully.";
 			}
 		}
-		
-		xhr.open("POST", "/accessions/image-sets", true);
-		xhr.send(jsonObject);
+		if (imageSetId !== "" && imageSetId === imageSetName) {
+			xhr.open("POST", "/accessions/image-sets?setId=" + imageSetUri, true);
+			xhr.send(jsonObject);
+		} else {
+			xhr.open("POST", "/accessions/image-sets", true);
+			xhr.send(jsonObject);
+		}
 	} else {
 		if (uriList.length == 0) {
 			alert("Error: Selection is empty.");
@@ -485,7 +495,7 @@ function getNumberOfImageSets() {
 	document.getElementById('imageSetCount').innerHTML = "Fetching image set data...";
 }
 
-function editImageSet(imageSetName) {
-	var url = window.location.href.substring(0, window.location.href.lastIndexOf("/")) + "?edit=" + imageSetName;
+function editImageSet(imageSetName, imageSetURI) {
+	var url = window.location.href.substring(0, window.location.href.lastIndexOf("/")) + "?edit=" + imageSetName + "&imageSetUri=" + imageSetURI;
 	window.location.href = url;
 }

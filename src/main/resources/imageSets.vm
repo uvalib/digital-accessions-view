@@ -30,7 +30,7 @@
 	              <tr>
 	                <td><a href=$i["uri"]>$i["id"]</a></td>
 	                <td>$i["date"]</td>
-	                <td><button type="button" id="editButton" value="Edit image set" onclick=editImageSet($i["id"])>Edit</button></td>
+	                <td><button type="button" id="editButton" value="Edit image set" onclick=editImageSet($i["id"],$i["uri"])>Edit</button></td>
 	            #end
 	            </tr>
 	        #end
