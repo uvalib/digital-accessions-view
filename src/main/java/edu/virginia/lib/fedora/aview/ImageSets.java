@@ -177,11 +177,35 @@ public class ImageSets extends AbstractWebResource {
         imageSetsTemplate.merge(context, w);
 		return Response.ok().encoding("UTF-8").entity(w.toString()).build();
 	}
-    
+
+    /**
+     * Builds a IIIF manifest for the given image set id.  This manifest conforms to the specification
+     * listed at http://iiif.io/api/presentation/2.1/
+     * 
+     * @param setId the dcterms identifier for the image set
+     * @param uriInfo the URIinfo associated with the current request
+     * @param request the request object for the current request
+     * @return a Response whose body is the IIIF presentation manifest for the specified image set.
+     */
+    @GET
+    @Produces("application/json")
+    @Path("image-sets/{setId: [^/]*}/iiif-manifest.json")
+    public Response getImageSetIIIFManifest(@PathParam("setId") final String setId, @Context UriInfo uriInfo, @Context HttpServletRequest request) throws IOException {
+        JsonObjectBuilder b = Json.createObjectBuilder();
+
+        // TODO: build the manifest here
+
+        return Response.ok().entity(b.build()).build();
+    }
+
     @GET
     @Produces("application/json")
     @Path("image-sets/{setId: [^/]*}")
     public Response getImageSet(@PathParam("setId") final String setId, @Context UriInfo uriInfo, @Context HttpServletRequest request) throws IOException {
+        return Response.ok().entity(getImageSetArray(setId, uriInfo)).build();
+    }
+
+    private JsonArray getImageSetArray(final String setId, final UriInfo uriInfo) throws IOException {
         final String sparqlQuery = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
                 "SELECT ?uri ?filename ?mimetype ?size ?bagName ?prev\n" +
                 "WHERE {\n" +
@@ -233,7 +257,7 @@ public class ImageSets extends AbstractWebResource {
             nextImage = next.get(nextImage);
         }
 
-        return Response.ok().entity(a.build()).build();
+        return a.build();
     }
 
     /**
