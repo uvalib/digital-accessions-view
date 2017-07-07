@@ -181,7 +181,7 @@ public class ImageSets extends AbstractWebResource {
     /**
      * Builds a IIIF manifest for the given image set id.  This manifest conforms to the specification
      * listed at http://iiif.io/api/presentation/2.1/
-     * 
+     *
      * @param setId the dcterms identifier for the image set
      * @param uriInfo the URIinfo associated with the current request
      * @param request the request object for the current request
@@ -215,6 +215,7 @@ public class ImageSets extends AbstractWebResource {
                 "  ?uri <http://fedora.info/definitions/v4/repository#hasParent> ?bag .\n" +
                 "  ?uri <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#filename> ?filename .\n" +
                 "  ?uri <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#hasMimeType> ?mimetype .\n" +
+                "  ?uri <http://www.loc.gov/premis/rdf/v1#hasMessageDigest> ?digest .\n" +
                 "  ?uri <http://www.loc.gov/premis/rdf/v1#hasSize> ?size .\n" +
                 "  ?bag <http://ontology.lib.virginia.edu/preservation#bagName> ?bagName .\n" +
                 "  OPTIONAL {\n" +
@@ -245,6 +246,7 @@ public class ImageSets extends AbstractWebResource {
             o.add("uri", id);
             o.add("filename", image.get("filename"));
             o.add("mimetype", image.get("mimetype"));
+            o.add("digegst", image.get("digest"));
             o.add("size", image.get("size"));
             o.add("bag", image.get("bagName"));
             data.put(id, o.build());
