@@ -6,15 +6,41 @@ var imageSetId = "";
 var imageSetUri = "";
 
 /* Disables 'Add' buttons for files that aren't images,
-loads image set if relevant, and calls noImageCheck
-to generate 'None' row. */
+loads image set if relevant, calls noImageCheck to
+generate 'None' row, and shortens file paths if needed. */
 
 function init() {
 	var fileTableRows = document.getElementsByTagName('table')[0].getElementsByTagName('tr');
-	for (i = 1; i < fileTableRows.length; i++) {
-		if (!fileTableRows[i].children[2].innerHTML.startsWith("image")) { //mime
-			fileTableRows[i].children[3].children[0].disabled = true;
+	
+	for (var i = 1; i < fileTableRows.length; i++) {
+		//shorten file path if longer than 40 characters
+		if (fileTableRows[i].children[0].children[0] != null) {
+			fileTableRows[i].children[0].children[0].innerHTML = trimFilePath(fileTableRows[i].children[0].children[0].innerHTML);
+		} else {
+			fileTableRows[i].children[0].innerHTML = trimFilePath(fileTableRows[i].children[0].innerHTML);
 		}
+		
+		//condense file sizes
+		var fileSize = parseInt(fileTableRows[i].children[1].innerHTML); //text in column 2
+		if (!isNaN(fileSize)) {
+			if (fileSize > 999999999) {
+				fileTableRows[i].children[1].innerHTML = Math.round((fileSize / 1073741824) * 10) / 10 + "GB";
+			} else if (fileSize > 999999) {
+				fileTableRows[i].children[1].innerHTML = Math.round((fileSize / 1048576) * 10) / 10 + "MB";
+			} else if (fileSize > 999) {
+				fileTableRows[i].children[1].innerHTML = Math.round((fileSize / 1024) * 10) / 10 + "KB";
+			} else {
+				fileTableRows[i].children[1].innerHTML = Math.round(fileSize * 10) / 10 + "B";
+			}
+		}
+		
+		//disable 'Add' button if the row doesn't contain an image
+		if (!fileTableRows[i].children[2].innerHTML.startsWith("image")) { //mime
+			fileTableRows[i].children[3].children[0].removeAttribute('onclick');
+			fileTableRows[i].children[3].children[0].setAttribute('class', 'disabled');
+			fileTableRows[i].children[3].children[0].children[0].setAttribute('src', '/img/disabled.png');
+		}
+		
 	}
 	
 	document.getElementById('imageSetName').value = "";
@@ -57,6 +83,35 @@ function init() {
 
 
 
+/* Trims file path to 40 characters, maintaining file name */
+function trimFilePath(filePath) {
+	//shorten file path if longer than 40 characters
+	if (filePath.length > 40) {
+		var fileName;
+		
+		if (filePath.lastIndexOf("/") != -1) {
+			fileName = filePath.substring(filePath.lastIndexOf("/"));
+		} else {
+			fileName = filePath;
+		}
+		
+		//if we would chop file name
+		if (fileName.length > 18 && fileName.length < 36) {
+			//keep file name and first 36 - fileName.length characters
+			filePath = filePath.substring(0, 36 - fileName.length) + "...." + filePath.substring(filePath.length - fileName.length);
+		} else if (fileName.length >= 36) {
+			//keep just file name
+			filePath = "...." + fileName;
+		} else {
+			//keep first and last 18 characters
+			filePath = filePath.substring(0, 18) + "...." + filePath.substring(filePath.length - 18);
+		}
+	}
+	return filePath;
+}
+
+
+
 /* Adds a row to the selection table with the specified image. */
 
 function addRow(img, uri, mime) {
@@ -69,7 +124,7 @@ function addRow(img, uri, mime) {
 		var table = document.getElementById('selectionTable');
 		var newRow = table.insertRow(table.getElementsByTagName("tr").length - 1);
 		
-		populateRow(newRow, img, uri);
+		populateRow(newRow, trimFilePath(img), uri);
 		checkDuplicates();
 		noImageCheck();
 	} else {
@@ -178,6 +233,14 @@ function moveRow(button, up, end) {
 
 
 
+/* Adds all images to the selection */
+function addAllImages() {
+	var fileTableRows = document.getElementsByTagName('table')[0].getElementsByTagName('tr');
+	for (var i = 1; i < fileTableRows.length; i++) {
+		fileTableRows[i].children[3].children[0].click();
+	}
+}
+
 /* Adds a "-None-" row to the selection table if empty and
 calls disableCreateButton. */
 
@@ -185,7 +248,7 @@ function noImageCheck() {
 	var table = document.getElementById('selectionTable');
 	var createButton = document.getElementById('createButton');
 	
-	//if selection is empty
+	//if no files are selected
 	if (table.getElementsByTagName("tr").length == 2) {
 		//add "-None-" indication row
 		var noneRow = table.insertRow(table.getElementsByTagName("tr").length - 1);
@@ -209,7 +272,7 @@ function noImageCheck() {
 
 
 
-/* Disables the createButton if there is no selection or no name. */
+/* Disables the createButton if there is no selection, no name, or duplicates. */
 
 function disableCreateButton() {
 	var table = document.getElementById('selectionTable');
@@ -325,54 +388,62 @@ function createImageSet() {
 function populateRow(newRow, img, uri) {
 	//add movement buttons
 	var moveCell = newRow.insertCell();
-	
+	moveCell.setAttribute("class", "move");
+	/*
 	var topButton = document.createElement("button");
 	topButton.innerHTML = "&uarr;&uarr;";
-	var attribute = document.createAttribute('onclick');
-	attribute.value = "moveRow(this, true, true)";
-	topButton.setAttributeNode(attribute);
+	topButton.setAttribute('onclick', 'moveRow(this, true, true)');
 	topButton.title = "Move image to top";
 	moveCell.appendChild(topButton);
+	*/
+	var topButton = document.createElement("div");
+	topButton.setAttribute('class', 'imgButton topButton');
+	topButton.setAttribute('onclick', 'moveRow(this, true, true)');
+	topButton.title = "Move image to top";
+	topButton.appendChild(document.createElement("img"));
+	topButton.children[0].setAttribute('src', '/img/top.png');
+	moveCell.appendChild(topButton);
 	
-	var upButton = document.createElement("button");
-	upButton.innerHTML = "&uarr;";
-	attribute = document.createAttribute('onclick');
-	attribute.value = "moveRow(this, true, false)";
-	upButton.setAttributeNode(attribute);
+	var upButton = document.createElement("div");
+	upButton.setAttribute('class', 'imgButton upButton');
+	upButton.setAttribute('onclick', 'moveRow(this, true, false)');
 	upButton.title = "Move image up";
+	upButton.appendChild(document.createElement("img"));
+	upButton.children[0].setAttribute('src', '/img/up.png');
 	moveCell.appendChild(upButton);
 	
 	moveCell.appendChild(document.createElement("br"));
 	
-	var bottomButton = document.createElement("button");
-	bottomButton.innerHTML = "&darr;&darr;";
-	attribute = document.createAttribute('onclick');
-	attribute.value = "moveRow(this, false, true)";
-	bottomButton.setAttributeNode(attribute);
+	var bottomButton = document.createElement("div");
+	bottomButton.setAttribute('class', 'imgButton bottomButton');
+	bottomButton.setAttribute('onclick', 'moveRow(this, false, true)');
 	bottomButton.title = "Move image to bottom";
+	bottomButton.appendChild(document.createElement("img"));
+	bottomButton.children[0].setAttribute('src', '/img/bottom.png');
 	moveCell.appendChild(bottomButton);
 	
-	var downButton = document.createElement("button");
-	downButton.innerHTML = "&darr;";
-	attribute = document.createAttribute('onclick');
-	attribute.value = "moveRow(this, false, false)";
-	downButton.setAttributeNode(attribute);
+	var downButton = document.createElement("div");
+	downButton.setAttribute('class', 'imgButton downButton');
+	downButton.setAttribute('onclick','moveRow(this, false, false)');
 	downButton.title = "Move image down";
+	downButton.appendChild(document.createElement("img"));
+	downButton.children[0].setAttribute('src', '/img/down.png');
 	moveCell.appendChild(downButton);
 	
 	//add text
 	var textCell = newRow.insertCell();
+	textCell.setAttribute("class", "selectedFiles");
 	textCell.appendChild(document.createTextNode(img));
 	
 	//add button
 	var buttonCell = newRow.insertCell();
-	var removeButton = document.createElement('button');
-	removeButton.type = 'button';
-	removeButton.innerHTML = 'Remove';
-	attribute = document.createAttribute('onclick');
-	attribute.value = "removeRow(this)";
-	removeButton.setAttributeNode(attribute);
+	buttonCell.setAttribute("class", "remove");
+	var removeButton = document.createElement('div');
+	removeButton.setAttribute('class', 'imgButton removeButton');
+	removeButton.setAttribute('onclick','removeRow(this)');
 	removeButton.title = "Remove image from selection";
+	removeButton.appendChild(document.createElement("img"));
+	removeButton.children[0].setAttribute('src', '/img/remove.png');
 	buttonCell.appendChild(removeButton);
 	
 	//store uri info in hidden cell

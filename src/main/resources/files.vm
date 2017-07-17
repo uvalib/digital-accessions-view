@@ -1,54 +1,74 @@
 <html>
-  <head>
-      <title>$aname : Bag $bname</title>
-      <link rel="stylesheet" type="text/css" href="/style.css">
-      <script type="text/javascript" src="/main.js"></script>
-  </head>
-  <body onload="init();">
-    <div class="breadcrumbs"><a href="/accessions">Accessions</a> <span class="hierarchy-separator" /> <a href="/accessions/$aname">$aname</a> <span class="hierarchy-separator" /><h1>$bname</h1></div>
-    <dl>
-        <dt>Title</dt>
-        <dd>$btitle</dd>
-    </dl>
-    <p>Image set description stub.</p>
-    <p id="imageSetCount"></p>
-    <div style="float:left;">
-	    <table style="float:left;">
-	        <tr><th>File Path</th><th>Size</th><th>Mime Type</th><th>Add</th></tr>
-	        #foreach( $f in $files )
-	            #set( $furi = $f["file"] )
-	            #if ($f["size"] == "")
-	              <tr class="missing-file">
-	                <td>$f["path"]</td>
-	                <td>(not in fedora)</td>
-	            #else
-	              <tr>
-	                <td><a href="$furi">$f["path"]</a></td>
-	                <td>$f["size"]</td>
-	            #end
-	              <td>$f["mime"]</td>
-	              <td><button type="button" title="Add image to selection" onclick="addRow(&quot;$f["path"]&quot;,&quot;$f["file"]&quot;,&quot;$f["mime"]&quot;)">Add</button></td>
-	            </tr>
-	        #end
-	    </table>
-	    
-	    <table id="selectionTable">
-	    	<tr>
-	    		<th>Move</th>
-	    		<th>Selected Files</th>
-	    		<th>Remove</th>
-	    		<th style="display: none;">D</th>
-	    	</tr>
-	    	<tr>
-	    		<td colspan="4">
-	    			<button type="button" id="createButton" title="Create image set from selection" onClick="checkName()">Create Image Set</button>
-	    			<input type="text" placeholder="Image Set Name" title="Image set name" id="imageSetName" onKeyUp="disableCreateButton();" />
-	    		</td>
-	    	</tr>
-	    </table>
-	    
-	    <p id="p"></p>
-	    <p id="debug"></p>
-    </div>
-  </body>
+<head>
+	<title>$aname : Bag $bname</title>
+	<link rel="stylesheet" type="text/css" href="/style.css">
+	<script type="text/javascript" src="/main.js"></script>
+</head>
+<body onload="init();">
+	
+	<div class="breadcrumbs">
+		<a href="/accessions">Accessions</a><span class="hierarchy-separator"></span>
+		<a href="/accessions/$aname">$aname</a><span class="hierarchy-separator"></span>
+	</div>
+	<div class="title">
+		<h1>Image Set Creator</h1>
+	</div>
+	<div class="title">
+		<h3>Bag ID:</h3>
+		<h2>$bname</h2>
+		<br>
+		<h3>Title:</h3>
+		<h2>$btitle</h2>
+	</div>
+
+	<p class="description">An <span class="bold">image set</span> is a user-defined collection of images from a particular bag. Here you can create image sets by selecting the desired images, naming the set, and hitting "Create Image Set." Once created, image sets can be viewed elsewhere through an IIIF viewer. You may edit previously created image sets through the link below.</p>
+	<p id="imageSetCount"></p>
+	<button type="button" class="addAllImages" onclick="addAllImages();">Add all Images</button>
+	<div class="tables">
+		<table>
+			<tr>
+				<th class="file">File Path</th>
+				<th class="size">Size</th>
+				<th class="mime">Mime Type</th>
+				<th class="add">Add</th>
+			</tr>
+			#foreach( $f in $files )
+				#set( $furi = $f["file"] )
+				#if ($f["size"] == "")
+			<tr class="file missing-file">
+				<td>$f["path"]</td>
+				<td class="size">(not in fedora)</td>
+				#else
+			<tr>
+				<td class="file"><a href="$furi">$f["path"]</a></td>
+				<td class="size">$f["size"]</td>
+				#end
+				<td class="mime">$f["mime"]</td>
+				<td class="add">
+					<div class="imgButton addButton" title="Add image to selection" onclick="addRow(&quot;$f["path"]&quot;,&quot;$f["file"]&quot;,&quot;$f["mime"]&quot;)">
+						<img src="/img/add.png"></img>
+					</div>
+				</td>
+			</tr>
+			#end
+		</table>
+
+		<table id="selectionTable">
+			<tr>
+				<th class="move">Move</th>
+				<th class="selectedFiles">Selected Files</th>
+				<th class="remove">Remove</th>
+				<th style="display: none;">D</th>
+			</tr>
+			<tr>
+				<td colspan="4">
+					<button type="button" id="createButton" title="Create image set from selection" onClick="checkName()">Create Image Set</button>
+					<input type="text" placeholder="Image Set Name" title="Image set name" id="imageSetName" onKeyUp="disableCreateButton();"></input>
+				</td>
+			</tr>
+		</table>
+
+		<p id="p"></p>
+	</div>
+</body>
 </html>

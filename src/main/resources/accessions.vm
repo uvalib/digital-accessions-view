@@ -4,8 +4,8 @@
       <link rel="stylesheet" type="text/css" href="/style.css">
   </head>
   <body>
-  <h1>Accessions</h1>
-    <table>
+  <h1 style="padding: 10px;">Accessions</h1>
+    <table style="margin: 10px;">
         <tr><th>ID</th></tr>
         #foreach( $a in $accessions )
             #set( $auri = $a["a"] )
