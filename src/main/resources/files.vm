@@ -5,7 +5,6 @@
 	<script type="text/javascript" src="/main.js"></script>
 </head>
 <body onload="init();">
-	
 	<div class="breadcrumbs">
 		<a href="/accessions">Accessions</a><span class="hierarchy-separator"></span>
 		<a href="/accessions/$aname">$aname</a><span class="hierarchy-separator"></span>
@@ -52,23 +51,23 @@
 			</tr>
 			#end
 		</table>
-
-		<table id="selectionTable">
-			<tr>
-				<th class="move">Move</th>
-				<th class="selectedFiles">Selected Files</th>
-				<th class="remove">Remove</th>
-				<th style="display: none;">D</th>
-			</tr>
-			<tr>
-				<td colspan="4">
-					<button type="button" id="createButton" title="Create image set from selection" onClick="checkName()">Create Image Set</button>
-					<input type="text" placeholder="Image Set Name" title="Image set name" id="imageSetName" onKeyUp="disableCreateButton();"></input>
-				</td>
-			</tr>
-		</table>
-
-		<p id="p"></p>
+		<div>
+			<table id="selectionTable">
+				<tr>
+					<th class="move">Move</th>
+					<th class="selectedFiles">Selected Files</th>
+					<th class="remove">Remove</th>
+					<th style="display: none;">D</th>
+				</tr>
+				<tr>
+					<td colspan="4">
+						<button type="button" id="createButton" title="Create image set from selection" onClick="checkName()">Create Image Set</button>
+						<input type="text" placeholder="Image Set Name" title="Image set name" id="imageSetName" onKeyUp="disableCreateButton();"></input>
+					</td>
+				</tr>
+			</table>
+			<p id="p"></p>
+		</div>
 	</div>
 </body>
 </html>
