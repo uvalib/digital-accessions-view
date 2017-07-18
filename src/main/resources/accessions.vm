@@ -1,17 +1,19 @@
 <html>
-  <head>
-      <title>Accessions</title>
-      <link rel="stylesheet" type="text/css" href="/style.css">
-  </head>
-  <body>
-  <h1 class="padded">Accessions</h1>
-    <table class="margin">
-        <tr><th>ID</th></tr>
-        #foreach( $a in $accessions )
-            #set( $auri = $a["a"] )
-            #set( $aname = $helper.uriToId( $auri ) )
-            <tr><td><a href="/accessions/$aname">$aname</a></td></tr>
-        #end
-    </table>
-  </body>
+<head>
+	<title>Accessions</title>
+	<link rel="stylesheet" type="text/css" href="/style.css">
+</head>
+<body>
+	<div class="title">
+		<h1>Accessions</h1>
+	</div>
+	<table class="margin">
+		<tr><th>ID</th></tr>
+		#foreach( $a in $accessions )
+			#set( $auri = $a["a"] )
+			#set( $aname = $helper.uriToId( $auri ) )
+		<tr><td><a href="/accessions/$aname">$aname</a></td></tr>
+		#end
+	</table>
+</body>
 </html>

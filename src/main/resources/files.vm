@@ -20,8 +20,8 @@
 		<h2>$btitle</h2>
 	</div>
 	<button type="button" id="viewerButton" class="margin" onclick="toggleCreator();">Open Image Set Creator</button>
-	<p id="imageSetCount"></p>
-	<p id="editorDescription" class="description hidden">An <span class="bold">image set</span> is a user-defined collection of images from a particular bag. Here you can create image sets by selecting the desired images, naming the set, and hitting "Create Image Set." Once created, image sets can be viewed elsewhere through an IIIF viewer. You may edit previously created image sets through the link below.</p>
+	<p id="imageSetCount"><a href="/accessions/$aname/bags/$bname/imageSets">View image sets of this bag.</a></p>
+	<p id="editorDescription" class="description hidden">An <span class="bold">image set</span> is a user-defined collection of images from a particular bag. Here you can create image sets by selecting the desired images, naming the set, and hitting "Create Image Set." Once created, image sets can be viewed elsewhere through an IIIF viewer. You may edit previously created image sets through the link above.</p>
 	<button type="button" id="editorAddAll" class="addAllImages hidden" onclick="addAllImages();">Add all Images</button>
 	<div class="tables">
 		<table>

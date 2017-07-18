@@ -44,7 +44,7 @@ function init() {
 		
 	}
 	
-	hideSizeAndMime();
+	toggleSizeAndMime();
 	
 	document.getElementById('imageSetName').value = "";
 	
@@ -69,6 +69,8 @@ function init() {
 				
 				window.history.pushState("state", "", window.location.href.substring(0, window.location.href.indexOf("?"))); //trim off variable
 				
+				toggleCreator();
+				
 				document.getElementById('p').innerHTML = "Loaded image set.";
 			}
 		}
@@ -80,13 +82,14 @@ function init() {
 		
 	}
 	
-	getNumberOfImageSets();
+	//getNumberOfImageSets();
 	noImageCheck();
 }
 
 
 
 /* Trims file path to 40 characters, maintaining file name */
+
 function trimFilePath(filePath) {
 	//shorten file path if longer than 40 characters
 	if (filePath.length > 40) {
@@ -237,6 +240,7 @@ function moveRow(button, up, end) {
 
 
 /* Adds all images to the selection */
+
 function addAllImages() {
 	var fileTableRows = document.getElementsByTagName('table')[0].getElementsByTagName('tr');
 	for (var i = 1; i < fileTableRows.length; i++) {
@@ -295,8 +299,7 @@ function disableCreateButton() {
 /* Checks availability of image set name before calling createImageSet */
 
 function checkName() {
-	var imageSetName = document.getElementById('imageSetName').value.replace(" ", "_");
-	
+	var imageSetName = document.getElementById('imageSetName').value.replace(/ /g, '_');
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == 4 && this.status != 200) {
@@ -331,7 +334,7 @@ function checkName() {
 function createImageSet() {
 	if (uriList.length != 0 && document.getElementById('imageSetName').value !== "" && !duplicate) {
 		var table = document.getElementById('selectionTable');
-		var imageSetName = document.getElementById('imageSetName').value.replace(" ", "_");
+		var imageSetName = document.getElementById('imageSetName').value.replace(/ /g, '_');
 		
 		//convert array to string
 		var uriString = "[ ";
@@ -356,7 +359,7 @@ function createImageSet() {
 				imageList.length = 0;
 				document.getElementById('imageSetName').value = "";
 				
-				setTimeout(function(){getNumberOfImageSets();}, 7500); //server takes time to update
+				//setTimeout(function(){getNumberOfImageSets();}, 7500); //server takes time to update
 				checkDuplicates();
 				noImageCheck();
 				
@@ -546,6 +549,10 @@ function checkDuplicates() {
 	}
 }
 
+
+
+/* Gets the number of image sets and places the number in a 'p' tag */
+
 function getNumberOfImageSets() {
 	//create AJAX server request
 	var xhr = new XMLHttpRequest();
@@ -569,15 +576,24 @@ function getNumberOfImageSets() {
 	document.getElementById('imageSetCount').innerHTML = "Fetching image set data...";
 }
 
+
+
+/* Called when clicking to edit image set. Loads image viewer 
+with parameters in the URL to load the proper image set. */
+
 function editImageSet(imageSetName, imageSetURI) {
 	var url = window.location.href.substring(0, window.location.href.lastIndexOf("/")) + "?edit=" + imageSetName + "&imageSetUri=" + imageSetURI;
 	window.location.href = url;
 }
 
+
+
+/* Hides or shows image set creation functionality. */
+
 function toggleCreator() {
 	editorVisible = !editorVisible;
 	
-	hideSizeAndMime();
+	toggleSizeAndMime();
 	
 	var addColumn = document.getElementsByClassName("add");
 	for (var i = 0; i < addColumn.length; i++) {
@@ -592,10 +608,14 @@ function toggleCreator() {
 }
 
 window.onresize = function(e) {
-	hideSizeAndMime();
+	toggleSizeAndMime();
 }
 
-function hideSizeAndMime() {
+
+
+/* Hides or shows size and mime columns when needed. */
+
+function toggleSizeAndMime() {
 	var size = document.getElementsByClassName("size");
 	var mime = document.getElementsByClassName("mime");
 	for (var i = 0; i < size.length; i++) {
