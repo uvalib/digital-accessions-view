@@ -2,6 +2,7 @@ var imageList = []; //Potentially non-unique file path shown to user
 var uriList = []; //Unique URI sent to server
 
 var duplicate = false; //Flag for duplicate images in selection
+var editorVisible = false;
 var imageSetId = "";
 var imageSetUri = "";
 
@@ -42,6 +43,8 @@ function init() {
 		}
 		
 	}
+	
+	hideSizeAndMime();
 	
 	document.getElementById('imageSetName').value = "";
 	
@@ -555,8 +558,8 @@ function getNumberOfImageSets() {
 			
 			document.getElementById('imageSetCount').innerHTML = "There " +
 					(Object.keys(imageSets).length == 1 ?
-					"is currently <a href=\"" + url + "\">1 image set of the current bag.</a>" :
-					"are currently <a href=\"" + url + "\">" + Object.keys(imageSets).length + " image sets of the current bag.</a>");
+					"is currently <a href=\"" + url + "\">1 image set of this bag.</a>" :
+					"are currently <a href=\"" + url + "\">" + Object.keys(imageSets).length + " image sets of this bag.</a>");
 		}
 	}
 	
@@ -569,4 +572,34 @@ function getNumberOfImageSets() {
 function editImageSet(imageSetName, imageSetURI) {
 	var url = window.location.href.substring(0, window.location.href.lastIndexOf("/")) + "?edit=" + imageSetName + "&imageSetUri=" + imageSetURI;
 	window.location.href = url;
+}
+
+function toggleCreator() {
+	editorVisible = !editorVisible;
+	
+	hideSizeAndMime();
+	
+	var addColumn = document.getElementsByClassName("add");
+	for (var i = 0; i < addColumn.length; i++) {
+		addColumn[i].style.display = editorVisible ? "table-cell" : "none";
+	}
+	
+	document.getElementById("viewerTitle").innerHTML = editorVisible ? "Image Set Creator" : "Bag Viewer";
+	document.getElementById("editorDescription").style.display = editorVisible ? "block" : "none";
+	document.getElementById("viewerButton").innerHTML = editorVisible ? "Hide Image Set Creator" : "Open Image Set Creator";
+	document.getElementById("editorAddAll").style.display = editorVisible ? "inline" : "none";	
+	document.getElementById("selectionTable").style.display = editorVisible ? "inline-table" : "none";
+}
+
+window.onresize = function(e) {
+	hideSizeAndMime();
+}
+
+function hideSizeAndMime() {
+	var size = document.getElementsByClassName("size");
+	var mime = document.getElementsByClassName("mime");
+	for (var i = 0; i < size.length; i++) {
+		size[i].style.display = window.innerWidth > 1125 || !editorVisible ? "table-cell" : "none";
+		mime[i].style.display = window.innerWidth > 1125 || !editorVisible ? "table-cell" : "none";
+	}
 }

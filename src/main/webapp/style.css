@@ -157,12 +157,32 @@ th.missing-file {
     font-style: italic;
 }
 
+.editor {
+	display: none;
+}
+
+.padded {
+	padding: 10px;
+}
+
+.margin {
+	margin: 10px;
+}
+
+.hidden {
+	display: none;
+}
+
+.visible {
+	display: initial;
+}
+/*
 @media only screen and (min-width: 1125px) {
 	.size, .mime {
 		display: table-cell;
 	}
 }
-
+*/
 #selectionTable {
 	min-width: 300px;
 }
