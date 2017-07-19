@@ -4,7 +4,10 @@
       <link rel="stylesheet" type="text/css" href="/style.css">
   </head>
   <body>
-    <div class="breadcrumbs"><a href="/accessions">Accessions</a> <span class="hierarchy-separator" /><h1>$aname</h1></div>
+    <div class="breadcrumbs"><a href="/accessions">Accessions</a> <span class="hierarchy-separator" /></div>
+	<div class="title">
+		<h1>$aname</h1>
+	</div>
     <table>
         <tr><th>Bag ID</th><th>Title</th><th>Date sent to AP Trust</th></tr>
         #foreach( $b in $bags )
