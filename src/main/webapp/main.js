@@ -71,7 +71,7 @@ function init() {
 				
 				toggleCreator();
 				
-				document.getElementById('p').innerHTML = "Loaded image set.";
+				document.getElementById('p').innerHTML = "";
 			}
 		}
 		
