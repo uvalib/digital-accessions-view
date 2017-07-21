@@ -1,5 +1,6 @@
 <html>
 <head>
+	<meta charset="utf-8">
 	<title>$aname : Bag $bname</title>
 	<link rel="stylesheet" type="text/css" href="/style.css">
 	<script type="text/javascript" src="/main.js"></script>
@@ -22,36 +23,39 @@
 	<button type="button" id="viewerButton" class="margin" onclick="toggleCreator();">Open Image Set Creator</button>
 	<p id="imageSetCount"><a href="/accessions/$aname/bags/$bname/imageSets">View image sets of this bag.</a></p>
 	<p id="editorDescription" class="description hidden">An <span class="bold">image set</span> is a user-defined collection of images from a particular bag. Here you can create image sets by selecting the desired images, naming the set, and hitting "Create Image Set." Once created, image sets can be viewed elsewhere through an IIIF viewer. You may edit previously created image sets through the link above.</p>
-	<button type="button" id="editorAddAll" class="addAllImages hidden" onclick="addAllImages();">Add all Images</button>
 	<div class="tables">
-		<table>
-			<tr>
-				<th class="file">File Path</th>
-				<th class="size">Size</th>
-				<th class="mime">Mime Type</th>
-				<th class="add hidden">Add</th>
-			</tr>
-			#foreach( $f in $files )
-				#set( $furi = $f["file"] )
-				#if ($f["size"] == "")
-			<tr class="file missing-file">
-				<td>$f["path"]</td>
-				<td class="size">(not in fedora)</td>
-				#else
-			<tr>
-				<td class="file"><a href="$furi">$f["path"]</a></td>
-				<td class="size">$f["size"]</td>
-				#end
-				<td class="mime">$f["mime"]</td>
-				<td class="add hidden">
-					<div class="imgButton addButton" title="Add image to selection" onclick="addRow(&quot;$f["path"]&quot;,&quot;$f["file"]&quot;,&quot;$f["mime"]&quot;)">
-						<img src="/img/add.png"></img>
-					</div>
-				</td>
-			</tr>
-			#end
-		</table>
 		<div>
+			<button type="button" id="editorAddAll" class="hidden margin-left" onclick="addAllImages();">Add all Images</button>
+			<table>
+				<tr>
+					<th class="file">File Path</th>
+					<th class="size">Size</th>
+					<th class="mime">Mime Type</th>
+					<th class="add hidden">Add</th>
+				</tr>
+				#foreach( $f in $files )
+					#set( $furi = $f["file"] )
+					#if ($f["size"] == "")
+				<tr class="file missing-file">
+					<td>$f["path"]</td>
+					<td class="size">(not in fedora)</td>
+					#else
+				<tr>
+					<td class="file"><a href="$furi">$f["path"]</a></td>
+					<td class="size">$f["size"]</td>
+					#end
+					<td class="mime">$f["mime"]</td>
+					<td class="add hidden">
+						<div class="imgButton addButton" title="Add image to selection" onclick="addRow(&quot;$f["path"]&quot;,&quot;$f["file"]&quot;,&quot;$f["mime"]&quot;)">
+							<img src="/img/add.png"></img>
+						</div>
+					</td>
+				</tr>
+				#end
+			</table>
+		</div>
+		<div>
+			<button type="button" id="editorRemoveAll" class="hidden margin-left" onclick="removeAllImages();">Remove all Images</button>
 			<table id="selectionTable" class="hidden">
 				<tr>
 					<th class="move">Move</th>

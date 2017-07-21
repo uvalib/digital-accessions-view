@@ -79,7 +79,7 @@ h1, h2, h3, h4, h5, h6 {
 	font-weight: bold;
 }
 
-.addAllImages {
+.margin-left {
 	margin-left: 10px;
 }
 
@@ -88,7 +88,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .tables > * {
-	display: inline-table;
+	display: inline-block;
 	vertical-align: top;
 }
 
@@ -176,6 +176,7 @@ th.missing-file {
 .visible {
 	display: initial;
 }
+
 /*
 @media only screen and (min-width: 1125px) {
 	.size, .mime {
