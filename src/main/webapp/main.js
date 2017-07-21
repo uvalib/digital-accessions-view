@@ -118,6 +118,35 @@ function trimFilePath(filePath) {
 
 
 
+/* Toggles given 'Add' button on and off. */
+
+function toggleAddButton(button) {
+	if (button.className.includes("disabled")) {
+		button.className = "imgButton addButton";
+		button.setAttribute("onclick", button.getAttribute("onclick").substring(2)); //uncomment the onclick
+		button.children[0].setAttribute('src', '/img/add.png');
+	} else {
+		button.className = "disabled";
+		button.setAttribute("onclick", "//" + button.getAttribute("onclick"));
+		button.children[0].setAttribute('src', '/img/disabled.png');
+	}
+}
+
+
+
+/* Finds and toggles buttons with matching URIs. */
+
+function toggleAddButtonFromURI(uri) {
+	var fileTableRows = document.getElementsByTagName('table')[0].getElementsByTagName('tr');
+	for (var i = 1; i < fileTableRows.length; i++) {
+		//if the onclick of the row has a matching URI
+		if (fileTableRows[i].children[3].children[0].getAttribute('onclick').includes(uri)) {
+			toggleAddButton(fileTableRows[i].children[3].children[0]);
+			break;
+		}
+	}
+}
+
 /* Adds a row to the selection table with the specified image. */
 
 function addRow(img, uri, mime) {
@@ -131,8 +160,11 @@ function addRow(img, uri, mime) {
 		var newRow = table.insertRow(table.getElementsByTagName("tr").length - 1);
 		
 		populateRow(newRow, trimFilePath(img), uri);
-		checkDuplicates();
+		toggleAddButtonFromURI(uri);
+		//checkDuplicates();
 		noImageCheck();
+		
+		document.getElementById('p').innerHTML = "";
 	} else {
 		alert("Error: File is not an image.");
 	}
@@ -156,8 +188,9 @@ function removeRow(button) {
 	uriList.splice(index, 1);
 	imageList.splice(index, 1);
 	
+	toggleAddButtonFromURI(row.children[3].innerHTML);
 	row.remove();
-	checkDuplicates();
+	//checkDuplicates();
 	noImageCheck();
 }
 
@@ -234,7 +267,7 @@ function moveRow(button, up, end) {
 		}
 	}
 	
-	checkDuplicates();
+	//checkDuplicates();
 }
 
 
@@ -245,6 +278,18 @@ function addAllImages() {
 	var fileTableRows = document.getElementsByTagName('table')[0].getElementsByTagName('tr');
 	for (var i = 1; i < fileTableRows.length; i++) {
 		fileTableRows[i].children[3].children[0].click();
+	}
+}
+
+
+
+/* Removes all images from the selection */
+
+function removeAllImages() {
+	var selectionTableRows = document.getElementById('selectionTable').getElementsByTagName('tr');
+	var rows = selectionTableRows.length;
+	for (var i = 1; i < rows - 1; i++) {
+		selectionTableRows[1].children[2].children[0].click();
 	}
 }
 
@@ -332,7 +377,7 @@ function checkName() {
 /* Sends uriList to server as a string for image set creation. */
 
 function createImageSet() {
-	if (uriList.length != 0 && document.getElementById('imageSetName').value !== "" && !duplicate) {
+	if (uriList.length != 0 && document.getElementById('imageSetName').value !== "") {
 		var table = document.getElementById('selectionTable');
 		var imageSetName = document.getElementById('imageSetName').value.replace(/ /g, '_');
 		
@@ -353,19 +398,20 @@ function createImageSet() {
 				document.getElementById('p').innerHTML = "Error: Status code " + this.status  + ".";
 			} else if (xhr.readyState == 4 && this.status == 200) {
 				for (i = 0; i < uriList.length; i++) {
+					toggleAddButtonFromURI(table.children[0].children[1].children[3].innerHTML);
 					table.children[0].children[1].remove();
 				}
 				uriList.length = 0;
 				imageList.length = 0;
 				document.getElementById('imageSetName').value = "";
 				
-				//setTimeout(function(){getNumberOfImageSets();}, 7500); //server takes time to update
-				checkDuplicates();
+				//checkDuplicates();
 				noImageCheck();
 				
 				document.getElementById('p').innerHTML = "Image set saved successfully.";
 			}
 		}
+		//send replace flag if needed
 		if (imageSetId !== "" && imageSetId === imageSetName) {
 			xhr.open("POST", "/accessions/image-sets?setId=" + imageSetUri, true);
 			xhr.send(jsonObject);
@@ -395,13 +441,7 @@ function populateRow(newRow, img, uri) {
 	//add movement buttons
 	var moveCell = newRow.insertCell();
 	moveCell.setAttribute("class", "move");
-	/*
-	var topButton = document.createElement("button");
-	topButton.innerHTML = "&uarr;&uarr;";
-	topButton.setAttribute('onclick', 'moveRow(this, true, true)');
-	topButton.title = "Move image to top";
-	moveCell.appendChild(topButton);
-	*/
+	
 	var topButton = document.createElement("div");
 	topButton.setAttribute('class', 'imgButton topButton');
 	topButton.setAttribute('onclick', 'moveRow(this, true, true)');
@@ -456,97 +496,6 @@ function populateRow(newRow, img, uri) {
 	var uriCell = newRow.insertCell();
 	uriCell.innerHTML = uri;
 	uriCell.style.display = "none";
-	
-	var duplicateCell = newRow.insertCell();
-	duplicateCell.style.display = "none";
-}
-
-
-
-/* Checks for duplicate URIs and highlights their rows if found. */
-
-function checkDuplicates() {
-	var duplicates = [];
-	var current;
-	var exemptList = [];
-	var p = document.getElementById('p');
-	
-	//go through all rows
-	for (i = 0; i < uriList.length; i++) {
-		
-		//check if rows i and j are duplicates
-		var current = [i];
-		for (j = i + 1; j < uriList.length; j++) {
-			
-			//check if j has been marked as a duplicate before
-			var exempt = false;
-			for (k = 0; k < exemptList.length; k++) {
-				if (exemptList[k] == j) {
-					exempt = true;
-				}
-			}
-			
-			if (uriList[i] == uriList[j] && !exempt) {
-				current.push(j);
-			}
-		}
-		
-		if (current.length != 1) {
-			duplicates.push(current);
-			//exempt uris from additional for loop passes
-			for (j = 0; j < current.length; j++) {
-				exemptList.push(current[j]);
-			}
-		}
-	}
-	
-	if (duplicates.length > 0) {
-		//for all rows, if row number matches duplicate, insert index of duplicate
-		var table = document.getElementById('selectionTable');
-		
-		table.children[0].children[0].children[3].style.display = "table-cell";
-		
-		//for every row
-		for (i = 1; i < table.children[0].children.length - 1; i++) {
-			var proc = false;
-			var cell = table.children[0].children[i].lastChild;
-			
-			cell.style.display = "table-cell";
-			
-			//for every set of duplicates
-			for (j = 0; j < duplicates.length; j++) {
-				//for every duplicate
-				for (k = 0; k < duplicates[j].length; k++) {
-					if (duplicates[j][k] == i - 1) {
-						cell.innerHTML = j + 1;
-						proc = true;
-					} //if 'if' never procs then remove the cell.
-				}
-			}
-			
-			if (!proc) {
-				cell.innerHTML = "";
-			}
-		}
-		
-		duplicate = true;
-		p.innerHTML = "Warning: " + duplicates.length +
-				(duplicates.length == 1 ? " set " : " sets ") +
-				"of duplicates detected.";
-	} else {
-		//hide duplicate cells
-		var table = document.getElementById('selectionTable');
-		
-		table.children[0].children[0].children[3].style.display = "none";
-		
-		for (i = 1; i < table.children[0].children.length - 1; i++) {
-			var cell = table.children[0].children[i].lastChild;
-			cell.style.display = "none";
-		}
-		
-		duplicate = false;
-		p.innerHTML = "";
-	}
 }
 
 
@@ -604,7 +553,8 @@ function toggleCreator() {
 	document.getElementById("editorDescription").style.display = editorVisible ? "block" : "none";
 	document.getElementById("viewerButton").innerHTML = editorVisible ? "Hide Image Set Creator" : "Open Image Set Creator";
 	document.getElementById("editorAddAll").style.display = editorVisible ? "inline" : "none";	
-	document.getElementById("selectionTable").style.display = editorVisible ? "inline-table" : "none";
+	document.getElementById("editorRemoveAll").style.display = editorVisible ? "inline" : "none";	
+	document.getElementById("selectionTable").style.display = editorVisible ? "table" : "none";
 }
 
 window.onresize = function(e) {
