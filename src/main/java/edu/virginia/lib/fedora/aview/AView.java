@@ -116,10 +116,11 @@ public class AView extends AbstractWebResource {
                 "PREFIX fcrepo: <http://fedora.info/definitions/v4/repository#>\n" +
                 "PREFIX dc: <http://purl.org/dc/elements/1.1/>\n" +
                 "PREFIX pres4: <http://ontology.lib.virginia.edu/preservation#>\n" +
+                "PREFIX presentation: <http://ontology.lib.virginia.edu/presentation#>\n" +
                 "PREFIX ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#>\n" +
                 "PREFIX hash: <http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/>\n" +
                 "\n" +
-                "SELECT ?file ?path ?filename ?mime ?size ?sha256 \n" +
+                "SELECT ?file ?path ?filename ?mime ?size ?sha256 ?iiifInfo \n" +
                 "WHERE { {\n" +
                 "    ?bag pres4:bagName '" + bagId + "' .\n" +
                 "    ?file fcrepo:hasParent ?bag .\n" +
@@ -128,7 +129,9 @@ public class AView extends AbstractWebResource {
                 "    ?file ebucore:hasMimeType ?mime .\n" +
                 " } OPTIONAL {\n" +
                 "    ?file premis:hasSize ?size .\n" +
-                "    ?file hash:sha-256 ?sha256 \n" +
+                "    ?file hash:sha-256 ?sha256 .\n" +
+                " } OPTIONAL {\n" +
+                "    ?file presentation:hasIIIFImageAPIInfo ?iiifInfo .\n" +
                 "} } ORDER BY ?path"));
         StringWriter w = new StringWriter();
         filesTemplate.merge(context, w);
