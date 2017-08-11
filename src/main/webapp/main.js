@@ -1,98 +1,127 @@
+/* main.js - Used in UVA Library digital accessions viewer */
+
 var imageList = []; //Potentially non-unique file path shown to user
 var uriList = []; //Unique URI sent to server
 
-var duplicate = false; //Flag for duplicate images in selection
 var editorVisible = false;
-var imageSetId = "";
+
+var imageSetId = ""; //used when editing a previously-created image set
 var imageSetUri = "";
 
+//file table and individual cells
+var ft, ftRows, ftPaths, ftThumbnails, ftSizes, ftMimes, ftAdds;
+
+//selection table and individual cells
+var st, stRows, stMoves, stPaths, stRemoves, stURIs;
+
+var info; //paragraph tag used to display contextual information
+
+var debugFlag = false; //manually change to 'true' to enable debug functionality
+
+
+
 /* Disables 'Add' buttons for files that aren't images,
-loads image set if relevant, calls noImageCheck to
-generate 'None' row, and shortens file paths if needed. */
+loads in image set if parameters are present,
+shortens file paths if needed,
+and calls noImageCheck to generate 'None' row. */
 
 function init() {
-	var fileTableRows = document.getElementsByTagName('table')[0].getElementsByTagName('tr');
+	//define variables now that the page is loaded
+	ft = document.getElementsByTagName('table')[0];
+	ftRows = ft.getElementsByTagName('tr');
+	ftPaths = ft.getElementsByClassName('file');
+	ftThumbnails = ft.getElementsByClassName('thumbnail');
+	ftSizes = ft.getElementsByClassName('size');
+	ftMimes = ft.getElementsByClassName('mime');
+	ftAdds = ft.getElementsByClassName('add');
+
+	st = document.getElementsByTagName('table')[1];
+	stRows = st.getElementsByTagName('tr');
+	stMoves = st.getElementsByClassName('move');
+	stPaths = st.getElementsByClassName('selectedFiles')
+	stRemoves = st.getElementsByClassName('remove')
+	stURIs = st.getElementsByClassName('uri');
 	
-	for (var i = 1; i < fileTableRows.length; i++) {
-		//shorten file path if longer than 40 characters
-		if (fileTableRows[i].children[0].children[0] != null) {
-			fileTableRows[i].children[0].children[0].innerHTML = trimFilePath(fileTableRows[i].children[0].children[0].innerHTML);
-		} else {
-			fileTableRows[i].children[0].innerHTML = trimFilePath(fileTableRows[i].children[0].innerHTML);
+	info = document.getElementById('info');
+	
+	for (var i = 1; i < ftRows.length; i++) { //i = 1 because first row is not data
+		
+		//shorten file path if needed
+		if (ftPaths[i].children[0] != null) { //if path is a link
+			ftPaths[i].children[0].innerHTML = trimFilePath(ftPaths[i].children[0].innerHTML);
+		} else { //if path is not a link
+			ftPaths[i].innerHTML = trimFilePath(ftPaths[i].innerHTML);
 		}
 		
-		//condense file sizes
-		var fileSize = parseInt(fileTableRows[i].children[1].innerHTML); //text in column 2
+		//condense displayed file size
+		var fileSize = parseInt(ftSizes[i].innerHTML);
 		if (!isNaN(fileSize)) {
 			if (fileSize > 999999999) {
-				fileTableRows[i].children[1].innerHTML = Math.round((fileSize / 1073741824) * 10) / 10 + "GB";
+				ftSizes[i].innerHTML = Math.round((fileSize / 1073741824) * 10) / 10 + "GB";
 			} else if (fileSize > 999999) {
-				fileTableRows[i].children[1].innerHTML = Math.round((fileSize / 1048576) * 10) / 10 + "MB";
+				ftSizes[i].innerHTML = Math.round((fileSize / 1048576) * 10) / 10 + "MB";
 			} else if (fileSize > 999) {
-				fileTableRows[i].children[1].innerHTML = Math.round((fileSize / 1024) * 10) / 10 + "KB";
+				ftSizes[i].innerHTML = Math.round((fileSize / 1024) * 10) / 10 + "KB";
 			} else {
-				fileTableRows[i].children[1].innerHTML = Math.round(fileSize * 10) / 10 + "B";
+				ftSizes[i].innerHTML = Math.round(fileSize * 10) / 10 + "B";
 			}
 		}
 		
-		//disable 'Add' button if the row doesn't contain an image
-		if (!fileTableRows[i].children[2].innerHTML.startsWith("image")) { //mime
-			fileTableRows[i].children[3].children[0].removeAttribute('onclick');
-			fileTableRows[i].children[3].children[0].setAttribute('class', 'disabled');
-			fileTableRows[i].children[3].children[0].children[0].setAttribute('src', '/img/disabled.png');
+		//if item isn't an image disable 'Add' button
+		if (!ftMimes[i].innerHTML.startsWith("image")) {
+			ftAdds[i].children[0].removeAttribute('onclick');
+			ftAdds[i].children[0].setAttribute('class', 'disabled');
+			ftAdds[i].children[0].children[0].setAttribute('src', '/img/disabled.png');
 		}
 		
 	}
 	
-	toggleSizeAndMime();
+	document.getElementById('imageSetName').value = ""; //keep browser from filling in cached value
 	
-	document.getElementById('imageSetName').value = "";
-	
-	//check for edit variable in url
-	if (window.location.href.indexOf("?edit") != -1) {
-		imageSetId = window.location.href.substring(window.location.href.indexOf("?edit") + 6, window.location.href.indexOf("&imageSetUri"));
-		imageSetUri = window.location.href.substring(window.location.href.indexOf("&imageSetUri") + 13);
+	//load image set if parameters are present
+	var parameters = getParameters();
+	if (parameters !== null
+			&& parameters.get("edit") !== undefined
+			&& parameters.get("imageSetUri") !== undefined) {
+		imageSetId = parameters.get("edit");
+		imageSetUri = parameters.get("imageSetUri");
 		
-		//get image set for id, load images into table
+		//get image set for the given id, load images into table
 		var xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function() {
-			if (xhr.readyState == 4 && this.status != 200) {
-				document.getElementById('p').innerHTML = "Error retrieving image set: Status code " + this.status  + ".";
-			} else if (xhr.readyState == 4 && this.status == 200) {
+			if (xhr.readyState == 4 && this.status != 200) { //failure
+				info.innerHTML = "Error retrieving image set: Status code " + this.status  + ".";
+			} else if (xhr.readyState == 4 && this.status == 200) { //success
 				var images = JSON.parse(xhr.responseText);
-				document.getElementById('imageSetName').value = imageSetId;
+				document.getElementById('imageSetName').value = decodeURI(imageSetId);
 				
-				//only does one pass unless delcared with "var i"
 				for (var i = 0; i < images.length; i++) {
 					addRow(images[i]["filename"].toString(), images[i]["uri"].toString(), images[i]["mimetype"].toString());
 				}
 				
-				window.history.pushState("state", "", window.location.href.substring(0, window.location.href.indexOf("?"))); //trim off variable
+				window.history.pushState("state", "", window.location.href.substring(0, window.location.href.indexOf("?"))); //trim off parameters so this doesn't trigger again if refreshed
 				
 				toggleCreator();
-				
-				document.getElementById('p').innerHTML = "";
+				info.innerHTML = "";
 			}
 		}
 		
 		xhr.open("GET", "/accessions/image-sets/" + imageSetId, true);
 		xhr.send();
 		
-		document.getElementById('p').innerHTML = "Working...";
-		
+		info.innerHTML = "Working...";
 	}
 	
-	//getNumberOfImageSets();
-	noImageCheck();
+	noImageCheck(); //initially generate "-None-" row
 }
 
 
 
-/* Trims file path to 40 characters, maintaining file name */
+/* Trims file path to 'maxLength' characters, maintaining file name. */
 
-function trimFilePath(filePath) {
-	//shorten file path if longer than 40 characters
-	if (filePath.length > 40) {
+function trimFilePath(filePath, maxLength = 40) {
+	//shorten file path if longer than maxLength characters
+	if (filePath.length > maxLength) {
 		var fileName;
 		
 		if (filePath.lastIndexOf("/") != -1) {
@@ -102,15 +131,15 @@ function trimFilePath(filePath) {
 		}
 		
 		//if we would chop file name
-		if (fileName.length > 18 && fileName.length < 36) {
-			//keep file name and first 36 - fileName.length characters
-			filePath = filePath.substring(0, 36 - fileName.length) + "...." + filePath.substring(filePath.length - fileName.length);
-		} else if (fileName.length >= 36) {
+		if (fileName.length > Math.round((maxLength - 4) / 2) && fileName.length < maxLength - 4) {
+			//keep file name and first maxLength - 4 - fileName.length characters
+			filePath = filePath.substring(0, maxLength - 4 - fileName.length) + "...." + filePath.substring(filePath.length - fileName.length);
+		} else if (fileName.length >= maxLength - 4) {
 			//keep just file name
 			filePath = "...." + fileName;
 		} else {
-			//keep first and last 18 characters
-			filePath = filePath.substring(0, 18) + "...." + filePath.substring(filePath.length - 18);
+			//keep first and last Math.round((maxLength - 4) / 2) characters
+			filePath = filePath.substring(0, Math.round((maxLength - 4) / 2)) + "...." + filePath.substring(filePath.length - Math.round((maxLength - 4) / 2));
 		}
 	}
 	return filePath;
@@ -134,18 +163,35 @@ function toggleAddButton(button) {
 
 
 
-/* Finds and toggles buttons with matching URIs. */
+/* Finds and toggles 'Add' buttons with matching URIs. */
 
 function toggleAddButtonFromURI(uri) {
-	var fileTableRows = document.getElementsByTagName('table')[0].getElementsByTagName('tr');
-	for (var i = 1; i < fileTableRows.length; i++) {
+	for (var i = 1; i < ftRows.length; i++) {
 		//if the onclick of the row has a matching URI
-		if (fileTableRows[i].children[3].children[0].getAttribute('onclick').includes(uri)) {
-			toggleAddButton(fileTableRows[i].children[3].children[0]);
+		if (ftAdds[i].children[0].getAttribute('onclick').includes(uri)) {
+			toggleAddButton(ftAdds[i].children[0]);
 			break;
 		}
 	}
 }
+
+
+
+/* Returns a map of parameters in the URL, or null if there are none. */
+
+function getParameters() {
+	var url = window.location.href;
+	if (url.indexOf("?") != -1) {
+		var parameters = new Map();
+		var urlParameters = url.substring(url.indexOf("?") + 1).split("&");
+		for (var i = 0; i < urlParameters.length; i++) {
+			parameters.set(urlParameters[i].split("=")[0], urlParameters[i].split("=")[1]);
+		}
+		return parameters;
+	}
+	return null;
+}
+
 
 /* Adds a row to the selection table with the specified image. */
 
@@ -156,15 +202,13 @@ function addRow(img, uri, mime) {
 		uriList.push(uri);
 		
 		//create row
-		var table = document.getElementById('selectionTable');
-		var newRow = table.insertRow(table.getElementsByTagName("tr").length - 1);
+		var newRow = st.insertRow(st.getElementsByTagName("tr").length - 1);
 		
 		populateRow(newRow, trimFilePath(img), uri);
 		toggleAddButtonFromURI(uri);
-		//checkDuplicates();
 		noImageCheck();
 		
-		document.getElementById('p').innerHTML = "";
+		info.innerHTML = "";
 	} else {
 		alert("Error: File is not an image.");
 	}
@@ -173,11 +217,12 @@ function addRow(img, uri, mime) {
 
 
 /* Removes the row containing the calling button and removes
-the corresponding imageList and uriList entries. */
+the corresponding array entries. */
 
 function removeRow(button) {
 	var row = button.parentNode.parentNode;
 	
+	//get index of row
 	var currentRow = row;
 	var index = -2; //-1 because the first row is the header. -2 because tbody?
 	while (currentRow.previousSibling != null) {
@@ -190,17 +235,15 @@ function removeRow(button) {
 	
 	toggleAddButtonFromURI(row.children[3].innerHTML);
 	row.remove();
-	//checkDuplicates();
 	noImageCheck();
 }
 
 
 
 /* Moves the calling button's row up or down, either by one or to the end.
-up and end are booleans. */
+'up' and 'end' are booleans. */
 
 function moveRow(button, up, end) {
-	var table = document.getElementById('selectionTable');
 	var row = button.parentNode.parentNode;
 	
 	//get index of row
@@ -222,7 +265,7 @@ function moveRow(button, up, end) {
 			imageList.splice(index + 1, 1);
 			
 			//move the row
-			var newRow = table.insertRow(1);
+			var newRow = st.insertRow(1);
 			populateRow(newRow, row.children[1].innerHTML, row.children[3].innerHTML);
 			row.remove();
 		//to bottom
@@ -234,7 +277,7 @@ function moveRow(button, up, end) {
 			imageList.splice(index, 1);
 			
 			//move the row
-			var newRow = table.insertRow(table.getElementsByTagName("tr").length - 1);
+			var newRow = st.insertRow(st.getElementsByTagName("tr").length - 1);
 			populateRow(newRow, row.children[1].innerHTML, row.children[3].innerHTML);
 			row.remove();
 		}
@@ -249,7 +292,7 @@ function moveRow(button, up, end) {
 			imageList.splice(index + 1, 1);
 			
 			//move the row
-			var newRow = table.insertRow(index);
+			var newRow = st.insertRow(index);
 			populateRow(newRow, row.children[1].innerHTML, row.children[3].innerHTML);
 			row.remove();
 		//down one
@@ -261,13 +304,12 @@ function moveRow(button, up, end) {
 			imageList.splice(index, 1);
 			
 			//move the row
-			var newRow = table.insertRow(index + 3);
+			var newRow = st.insertRow(index + 3);
 			populateRow(newRow, row.children[1].innerHTML, row.children[3].innerHTML);
 			row.remove();
 		}
 	}
-	
-	//checkDuplicates();
+	debug(); //only has an effect if 'debugFlag' is manually set
 }
 
 
@@ -275,9 +317,8 @@ function moveRow(button, up, end) {
 /* Adds all images to the selection */
 
 function addAllImages() {
-	var fileTableRows = document.getElementsByTagName('table')[0].getElementsByTagName('tr');
-	for (var i = 1; i < fileTableRows.length; i++) {
-		fileTableRows[i].children[3].children[0].click();
+	for (var i = 1; i < ftRows.length; i++) {
+		ftAdds[i].children[0].click();
 	}
 }
 
@@ -286,10 +327,9 @@ function addAllImages() {
 /* Removes all images from the selection */
 
 function removeAllImages() {
-	var selectionTableRows = document.getElementById('selectionTable').getElementsByTagName('tr');
-	var rows = selectionTableRows.length;
+	var rows = stRows.length;
 	for (var i = 1; i < rows - 1; i++) {
-		selectionTableRows[1].children[2].children[0].click();
+		stRemoves[1].children[0].click();
 	}
 }
 
@@ -297,13 +337,12 @@ function removeAllImages() {
 calls disableCreateButton. */
 
 function noImageCheck() {
-	var table = document.getElementById('selectionTable');
 	var createButton = document.getElementById('createButton');
 	
-	//if no files are selected
-	if (table.getElementsByTagName("tr").length == 2) {
+	
+	if (stRows.length == 2) { //if no files are selected
 		//add "-None-" indication row
-		var noneRow = table.insertRow(table.getElementsByTagName("tr").length - 1);
+		var noneRow = st.insertRow(stRows.length - 1);
 		
 		var textCell = noneRow.insertCell();
 		textCell.appendChild(document.createTextNode("-None-"));
@@ -320,19 +359,18 @@ function noImageCheck() {
 	}
 	
 	disableCreateButton();
+	debug(); //only has an effect if 'debugFlag' is manually set
 }
 
 
 
-/* Disables the createButton if there is no selection, no name, or duplicates. */
+/* Disables the createButton if there is no selection or no name. */
 
 function disableCreateButton() {
-	var table = document.getElementById('selectionTable');
 	var createButton = document.getElementById('createButton');
 	var imageSetName = document.getElementById('imageSetName');
 	
-	if (document.getElementById('noneRow') != null || imageSetName.value === "" ||
-			duplicate) {
+	if (document.getElementById('noneRow') !== null || imageSetName.value === "") {
 		createButton.disabled = true;
 	} else {
 		createButton.disabled = false;
@@ -344,7 +382,7 @@ function disableCreateButton() {
 /* Checks availability of image set name before calling createImageSet */
 
 function checkName() {
-	var imageSetName = document.getElementById('imageSetName').value.replace(/ /g, '_');
+	var imageSetName = encodeURI(document.getElementById('imageSetName').value);
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == 4 && this.status != 200) {
@@ -357,7 +395,7 @@ function checkName() {
 					create = confirm("An image set named \"" + imageSetName +
 							"\" already exists. Press 'OK' to overwrite.");
 					if (!create) {
-						document.getElementById('p').innerHTML = "Image set creation cancelled.";
+						info.innerHTML = "Image set creation cancelled.";
 					}
 					break;
 				}
@@ -369,7 +407,7 @@ function checkName() {
 	}
 	xhr.open("GET", "/accessions/image-sets/find", true);
 	xhr.send();
-	document.getElementById('p').innerHTML = "Processing...";
+	info.innerHTML = "Processing...";
 }
 
 
@@ -378,37 +416,27 @@ function checkName() {
 
 function createImageSet() {
 	if (uriList.length != 0 && document.getElementById('imageSetName').value !== "") {
-		var table = document.getElementById('selectionTable');
-		var imageSetName = document.getElementById('imageSetName').value.replace(/ /g, '_');
+		var imageSetName = encodeURI(document.getElementById('imageSetName').value);
 		
-		//convert array to string
-		var uriString = "[ ";
-		for (i = 0; i < uriList.length; i++) {
-			uriString += "\"" + uriList[i] + "\", ";
-		}
-		uriString = uriString.slice(0, -2) + " ]";
-
 		var jsonObject = JSON.stringify({"name":imageSetName,"uriList":uriList})
-
-		//create AJAX server request
+		
 		var xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function() {
-			if (xhr.readyState == 4 && this.status != 200) {
+			if (xhr.readyState == 4 && this.status != 200) { //failure
 				alert("Error: Status code " + this.status + ", ready state " + xhr.readyState + ".");
-				document.getElementById('p').innerHTML = "Error: Status code " + this.status  + ".";
-			} else if (xhr.readyState == 4 && this.status == 200) {
+				info.innerHTML = "Error: Status code " + this.status  + ".";
+			} else if (xhr.readyState == 4 && this.status == 200) { //success
 				for (i = 0; i < uriList.length; i++) {
-					toggleAddButtonFromURI(table.children[0].children[1].children[3].innerHTML);
-					table.children[0].children[1].remove();
+					toggleAddButtonFromURI(stURIs[0].innerHTML);
+					stRows[1].remove();
 				}
 				uriList.length = 0;
 				imageList.length = 0;
 				document.getElementById('imageSetName').value = "";
 				
-				//checkDuplicates();
 				noImageCheck();
 				
-				document.getElementById('p').innerHTML = "Image set saved successfully.";
+				info.innerHTML = "Image set saved successfully.";
 			}
 		}
 		//send replace flag if needed
@@ -422,13 +450,10 @@ function createImageSet() {
 	} else {
 		if (uriList.length == 0) {
 			alert("Error: Selection is empty.");
-			document.getElementById('p').innerHTML = "Error: Selection is empty.";
-		} else if (duplicate) {
-			alert("Error: Image selection contains duplicates.");
-			document.getElementById('p').innerHTML = "Error: Image selection contains duplicates";
+			info.innerHTML = "Error: Selection is empty.";
 		} else {
 			alert("Error: Image set name is empty.");
-			document.getElementById('p').innerHTML = "Error: Image set name is empty.";
+			info.innerHTML = "Error: Image set name is empty.";
 		}
 	}
 }
@@ -495,34 +520,8 @@ function populateRow(newRow, img, uri) {
 	//store uri info in hidden cell
 	var uriCell = newRow.insertCell();
 	uriCell.innerHTML = uri;
+	uriCell.setAttribute('class', 'uri');
 	uriCell.style.display = "none";
-}
-
-
-
-/* Gets the number of image sets and places the number in a 'p' tag */
-
-function getNumberOfImageSets() {
-	//create AJAX server request
-	var xhr = new XMLHttpRequest();
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState == 4 && this.status != 200) {
-			document.getElementById('imageSetCount').innerHTML = "Error retrieving image sets: Status code " +this.status  + ".";
-		} else if (xhr.readyState == 4 && this.status == 200) {
-			var imageSets = JSON.parse(xhr.responseText);
-			var url = (window.location.href.indexOf("?") == -1 ? window.location.href : window.location.href.substring(0, window.location.href.indexOf("?"))) + "/imageSets";
-			
-			document.getElementById('imageSetCount').innerHTML = "There " +
-					(Object.keys(imageSets).length == 1 ?
-					"is currently <a href=\"" + url + "\">1 image set of this bag.</a>" :
-					"are currently <a href=\"" + url + "\">" + Object.keys(imageSets).length + " image sets of this bag.</a>");
-		}
-	}
-	
-	xhr.open("GET", "/accessions/image-sets/find", true);
-	xhr.send();
-	
-	document.getElementById('imageSetCount').innerHTML = "Fetching image set data...";
 }
 
 
@@ -542,11 +541,10 @@ function editImageSet(imageSetName, imageSetURI) {
 function toggleCreator() {
 	editorVisible = !editorVisible;
 	
-	toggleSizeAndMime();
+	toggleFullView();
 	
-	var addColumn = document.getElementsByClassName("add");
-	for (var i = 0; i < addColumn.length; i++) {
-		addColumn[i].style.display = editorVisible ? "table-cell" : "none";
+	for (var i = 0; i < ftAdds.length; i++) {
+		ftAdds[i].style.display = editorVisible ? "table-cell" : "none";
 	}
 	
 	document.getElementById("viewerTitle").innerHTML = editorVisible ? "Image Set Creator" : "Bag Viewer";
@@ -557,19 +555,54 @@ function toggleCreator() {
 	document.getElementById("selectionTable").style.display = editorVisible ? "table" : "none";
 }
 
+
+
+/* Calls toggleFullView on window resize. */
+
 window.onresize = function(e) {
-	toggleSizeAndMime();
+	toggleFullView();
 }
 
 
 
 /* Hides or shows size and mime columns when needed. */
 
-function toggleSizeAndMime() {
-	var size = document.getElementsByClassName("size");
-	var mime = document.getElementsByClassName("mime");
-	for (var i = 0; i < size.length; i++) {
-		size[i].style.display = window.innerWidth > 1125 || !editorVisible ? "table-cell" : "none";
-		mime[i].style.display = window.innerWidth > 1125 || !editorVisible ? "table-cell" : "none";
+function toggleFullView() {
+	for (var i = 0; i < ftSizes.length; i++) {
+		ftSizes[i].style.display = window.innerWidth > 1110 || !editorVisible ? "table-cell" : "none";
+		ftMimes[i].style.display = window.innerWidth > 1110 || !editorVisible ? "table-cell" : "none";
+	}
+}
+
+
+
+/* Creates an overlay displaying an enlarged thumbnail
+of the passed image. */
+
+function enlargeThumbnail(image) {
+	var thumbnailUrl = image.getAttribute("src").replace("!32,32", "!512,512");
+	
+	var overlayDiv = document.createElement("div");
+	overlayDiv.setAttribute("class", "overlayBackground");
+	overlayDiv.setAttribute("onclick", "this.remove()");
+	
+	var bigImage = document.createElement("img");
+	bigImage.setAttribute("class", "overlayImage");
+	bigImage.setAttribute("src", thumbnailUrl);
+	
+	overlayDiv.appendChild(bigImage);
+	document.body.appendChild(overlayDiv);
+}
+
+
+
+/* Prints contents of imageList to p tag for debugging. */
+
+function debug() {
+	if (debugFlag) {
+		document.getElementById("debug").innerHTML = "";
+		for (var i = 0; i < imageList.length; i++) {
+			document.getElementById("debug").innerHTML += imageList[i] + "<br>";
+		}
 	}
 }

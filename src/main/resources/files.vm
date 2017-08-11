@@ -29,12 +29,14 @@
 			<table>
 				<tr>
 					<th class="file">File Path</th>
+					<th class="thumbnail"></th>
 					<th class="size">Size</th>
 					<th class="mime">Mime Type</th>
 					<th class="add hidden">Add</th>
 				</tr>
 				#foreach( $f in $files )
 					#set( $furi = $f["file"] )
+					#set( $finfo = $f["iiifInfo"])
 					#if ($f["size"] == "")
 				<tr class="file missing-file">
 					<td>$f["path"]</td>
@@ -42,12 +44,17 @@
 					#else
 				<tr>
 					<td class="file"><a href="$furi">$f["path"]</a></td>
+					#if ($helper.iiifThumbnail($finfo, 32) == "")
+						<td class="thumbnail">N/A</td>
+					#else
+						<td class="thumbnail"><img src=$helper.iiifThumbnail($finfo, 32) onclick="enlargeThumbnail(this)"></image></td>
+					#end
 					<td class="size">$f["size"]</td>
 					#end
 					<td class="mime">$f["mime"]</td>
 					<td class="add hidden">
 						<div class="imgButton addButton" title="Add image to selection" onclick="addRow(&quot;$f["path"]&quot;,&quot;$f["file"]&quot;,&quot;$f["mime"]&quot;)">
-							<img src="/img/add.png"></img>
+							<img src="/img/add.png" width="32px"></img>
 						</div>
 					</td>
 				</tr>
@@ -61,16 +68,16 @@
 					<th class="move">Move</th>
 					<th class="selectedFiles">Selected Files</th>
 					<th class="remove">Remove</th>
-					<th style="display: none;">D</th>
 				</tr>
 				<tr>
-					<td colspan="4">
+					<td colspan="3">
 						<button type="button" id="createButton" title="Create image set from selection" onClick="checkName()">Create Image Set</button>
 						<input type="text" placeholder="Image Set Name" title="Image set name" id="imageSetName" onKeyUp="disableCreateButton();"></input>
 					</td>
 				</tr>
 			</table>
-			<p id="p"></p>
+			<p id="info"></p>
+			<p id="debug"></p>
 		</div>
 	</div>
 </body>

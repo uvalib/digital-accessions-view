@@ -3,9 +3,9 @@
 		<meta charset="utf-8">
 		<title>$aname : Bag $bname Image Sets</title>
 		<link rel="stylesheet" type="text/css" href="/style.css">
-		<script type="text/javascript" src="/main.js"></script>
+		<script type="text/javascript" src="/imageSets.js"></script>
 	</head>
-	<body>
+	<body onload="init()">
 		<div class="breadcrumbs">
 			<a href="/accessions">Accessions</a>
 			<span class="hierarchy-separator" />
@@ -22,7 +22,7 @@
 			<h2>$btitle</h2>
 		</div>
 		<p>Image sets can take some time to be indexed. If you do not see an image set you just created or edited, try refreshing the page in a few minutes.</p>
-		<table style="float:left;">
+		<table>
 	        <tr><th>Set Name</th><th>Date Created</th><th>Edit</th></tr>
 	        #foreach( $i in $imageSets )
 	            #if ($i["size"] == "")
@@ -32,7 +32,7 @@
 	                <td>N/A</td>
 	            #else
 	              <tr>
-	                <td>$i["id"]</td>
+	                <td class="imageSetName">$i["id"]</td>
 	                <td>$i["date"]</td>
 	                <td><button type="button" id="editButton" value="Edit image set" onclick=editImageSet($i["id"],$i["uri"])>Edit</button></td>
 	            #end
@@ -40,6 +40,6 @@
 	        #end
 	    </table>
 	    
-	    <p id="p"></p>
+	    <p id="info"></p>
 	</body>
 </html>
