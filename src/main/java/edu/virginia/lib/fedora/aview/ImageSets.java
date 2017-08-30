@@ -204,8 +204,8 @@ public class ImageSets extends AbstractWebResource {
     		
     		canvases.add(factory.createObjectBuilder()
                     .add("@type", "sc:Canvas")
-                    .add("@id", "http://iiif.lib.virginia.edu/iiif/" + digest + "/canvas/c" + i)
-                    .add("thumbnail", "http://iiif.lib.virignia.edu/iiif/" + digest + "/full/!200,200/0/default.jpg")
+                    .add("@id", "https://iiif.lib.virginia.edu/iiif/" + digest + "/canvas/c" + i)
+                    .add("thumbnail", "https://iiif.lib.virginia.edu/iiif/" + digest + "/full/!200,200/0/default.jpg")
                     .add("label", ((JsonObject) array.get(i)).get("filename"))
                     .add("width", ((JsonObject) array.get(i)).get("width"))
                     .add("height", ((JsonObject) array.get(i)).get("height"))
@@ -214,16 +214,16 @@ public class ImageSets extends AbstractWebResource {
                                     .add("@type", "oa:Annotation")
                                     .add("motivation", "sc:painting")
                                     .add("resource", factory.createObjectBuilder()
-                                            .add("@id", "http://iiif.lib.virginia.edu/iiif/" + digest)
+                                            .add("@id", "https://iiif.lib.virginia.edu/iiif/" + digest)
                                             .add("@type", "dcTypes:image")
                                             .add("format", ((JsonObject) array.get(i)).get("mimetype"))
                                             .add("width", ((JsonObject) array.get(i)).get("width"))
                                             .add("height", ((JsonObject) array.get(i)).get("height"))
                                             .add("service", factory.createObjectBuilder()
                                                     .add("@context", "http://iiif.io/api/image/2/context.json")
-                                                    .add("@id", "http://iiif.lib.virginia.edu/iiif/" + digest)
+                                                    .add("@id", "https://iiif.lib.virginia.edu/iiif/" + digest)
                                                     .add("profile", "http://iiif.io/api/image/2/level1.json")))
-                                    .add("on", "http://iiif.lib.virginia.edu/iiif/" + digest + "/canvas/c" + i))));
+                                    .add("on", "https://iiif.lib.virginia.edu/iiif/" + digest + "/canvas/c" + i))));
         }
     	
         b.add("@context", "http://iiif.io/api/presentation/2/context.json")
@@ -232,10 +232,10 @@ public class ImageSets extends AbstractWebResource {
         .add("label", setId)
         .add("license", "http://rightsstatements.org/vocab/CNE/1.0/")
         .add("attribution", "Provided by the University of Virginia Library")
-        .add("logo", "http://iiif.lib.virginia.edu/iiif/static:1/full/full/0/default.jpg")
+        .add("logo", "https://iiif.lib.virginia.edu/iiif/static:1/full/full/0/default.jpg")
         .add("sequences", factory.createArrayBuilder()
                 .add(factory.createObjectBuilder()
-                        .add("startCanvas", "http://iiif.lib.virginia.edu/iiif/" + ((JsonObject) array.get(0)).get("digest").toString()
+                        .add("startCanvas", "https://iiif.lib.virginia.edu/iiif/" + ((JsonObject) array.get(0)).get("digest").toString()
                                 .substring(10, ((JsonObject) array.get(0)).get("digest").toString().length() - 1) + "/canvas/c0")
                         .add("@type", "sc:Sequence")
                         .add("canvases", canvases)));
