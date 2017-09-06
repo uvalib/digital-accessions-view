@@ -4,6 +4,7 @@ body {
 	padding: 0;
 	background: #ddd;
 	color: #222;
+	/*min-width: 950px;*/
 }
 
 a:link, a:visited {
@@ -79,31 +80,37 @@ h1, h2, h3, h4, h5, h6 {
 	font-weight: bold;
 }
 
-.addAllImages {
+.margin-left {
 	margin-left: 10px;
 }
 
 .tables {
-	min-width: 825px;
+	min-width: 925px;
 }
 
 .tables > * {
-	display: inline-table;
+	display: inline-block;
 	vertical-align: top;
 }
 
 .file {
-	max-width: 400px;
+	max-width: 325px;
+}
+
+.thumbnail {
+	max-width: 32px;
+}
+
+.thumbnail img {
+	cursor: pointer;
 }
 
 .size {
 	max-width: 75px;
-	display: none;
 }
 
 .mime {
-	max-width: 125px;
-	display: none;
+	max-width: 100px;
 }
 
 .add {
@@ -115,7 +122,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .selectedFiles {
-	max-width: 400px;
+	max-width: 325px;
 }
 
 .remove {
@@ -176,6 +183,30 @@ th.missing-file {
 .visible {
 	display: initial;
 }
+
+.overlayBackground {
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	left: 0;
+	top: 0;
+	padding: 0;
+	margin: 0;
+	background: rgba(0, 0, 0, .4);
+}
+
+.overlayImage {
+	display: block;
+	margin: auto;
+	position: relative;
+	top: 50%;
+	-ms-transform: translateY(-50%);
+	-webkit-transform: translateY(-50%);
+	-moz-transform:  translateY(-50%);
+	-o-transform: translateY(-50%);
+	transform: translateY(-50%);
+}
+
 /*
 @media only screen and (min-width: 1125px) {
 	.size, .mime {

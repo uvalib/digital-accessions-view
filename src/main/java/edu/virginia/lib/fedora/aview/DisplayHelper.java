@@ -10,7 +10,11 @@ public class DisplayHelper {
     }
 
     public String iiifThumbnail(final String serviceUrl, int size) {
-        final String root = serviceUrl.substring(0, serviceUrl.lastIndexOf("/info.json"));
+    	
+    	if (!serviceUrl.contains("/info.json")) {
+    		return "";
+    	}
+    	final String root = serviceUrl.substring(0, serviceUrl.lastIndexOf("/info.json"));
         return root + "/full/!" + size + "," + size + "/0/default.jpg";
     }
 

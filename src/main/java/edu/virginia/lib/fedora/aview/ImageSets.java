@@ -38,9 +38,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -131,7 +133,7 @@ public class ImageSets extends AbstractWebResource {
     
     private JsonArray getImageSetsArray(String bagName, UriInfo uriInfo) throws IOException {
     	final String sparqlQuery = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-                "SELECT DISTINCT ?imageSet ?id ?date\n" +
+                "SELECT DISTINCT ?imageSet ?id ?iiifInfo ?date\n" +
                 "WHERE {\n" +
                 "  ?imageSet rdf:type <http://ontology.lib.virginia.edu/presentation#ImageSet> .\n" +
                 "  ?imageSet <" + DC_ID.getURI() + "> ?id .\n" +
@@ -147,7 +149,7 @@ public class ImageSets extends AbstractWebResource {
             JsonObjectBuilder o = Json.createObjectBuilder();
             o.add("id", set.get("id"));
             o.add("uri", set.get("imageSet"));
-            o.add("date", set.get("date"));;
+            o.add("date", set.get("date"));
             a.add(o.build());
         }
         
@@ -321,8 +323,8 @@ public class ImageSets extends AbstractWebResource {
     @POST
     @Path("image-sets")
     public Response createOrUpdateImageSet(InputStream jsonInput, @QueryParam("setId") final String imageSetUriStr) {
-
-        JsonReader jsonReader = Json.createReader(jsonInput);
+    	
+    	JsonReader jsonReader = Json.createReader(jsonInput);
         JsonObject object = jsonReader.readObject();
         JsonArray array = object.getJsonArray("uriList");
         
