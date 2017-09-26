@@ -242,7 +242,8 @@ public class ImageSets extends AbstractWebResource {
                         .add("@type", "sc:Sequence")
                         .add("canvases", canvases)));
         
-        return Response.ok().entity(b.build()).build();
+        return Response.ok().header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET").entity(b.build()).build();
     }
 
     @GET
@@ -300,8 +301,8 @@ public class ImageSets extends AbstractWebResource {
             o.add("digest", image.get("digest"));
             o.add("size", image.get("size"));
             o.add("bag", image.get("bagName"));
-            o.add("width", image.get("width"));
-            o.add("height", image.get("height"));
+            o.add("width", Integer.parseInt(image.get("width")));
+            o.add("height", Integer.parseInt(image.get("height")));
 
             data.put(id, o.build());
         }
